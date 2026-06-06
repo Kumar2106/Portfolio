@@ -1,0 +1,603 @@
+<header>
+  <div class="container nav-container">
+    <div class="logo">
+      <span>&lt;</span>kumar.aditya<span>/&gt;</span>
+    </div>
+    <div class="nav-wrapper">
+      <nav>
+        <ul>
+          <li><a href="#about">About</a></li>
+          <li><a href="#tech">Skills</a></li>
+          <li><a href="#experience">Experience</a></li>
+          <li><a href="#certifications">Certificates</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <button class="theme-toggle" (click)="toggleTheme()" aria-label="Toggle theme">
+        @if (theme() === 'dark') {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        } @else {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        }
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Hero Section -->
+  <section class="hero-sec container">
+    <div class="hero-content">
+      <span class="hero-subtitle">Senior Software Engineer · AWS Certified</span>
+      <h1 class="hero-title">
+        Kumar Aditya
+      </h1>
+      <p class="hero-tagline glow-text">
+        From requirement to production — I own the full stack, building scalable backend systems & end-to-end DevOps pipelines.
+      </p>
+      <div class="hero-actions">
+        <a href="#experience" class="btn btn-primary">
+          View Work
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+        <a href="#contact" class="btn btn-secondary">Contact Me</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="container">
+    <div class="section-header">
+      <span class="section-label">// 01. Profile</span>
+      <h2 class="section-title">About Me</h2>
+    </div>
+    
+    <div class="about-grid">
+      <div class="about-text">
+        <p>
+          I am a Senior Software Engineer with over 4 years of hands-on experience designing, building, and maintaining high-performance backend systems. I specialize in crafting robust Java & Spring Boot microservices that process large-scale workloads reliably.
+        </p>
+        <p>
+          As an AWS Certified Solutions Architect (Associate), I bring a cloud-native perspective to engineering, ensuring everything is architected for high availability, security, and cost efficiency.
+        </p>
+        <p>
+          I thrive on taking features from early requirements to live production. This includes setting up automated CI/CD pipelines, containerizing workloads, and owning database schemas, allowing engineering teams to ship code smoothly and efficiently.
+        </p>
+      </div>
+      
+      <!-- Stats Strip -->
+      <div class="stats-container">
+        <div class="stat-item">
+          <span class="stat-val gradient-text-blue">20%</span>
+          <span class="stat-lbl">AWS Cost Reduction</span>
+        </div>
+        <div class="stat-item alt">
+          <span class="stat-val gradient-text-orange">$24,000+</span>
+          <span class="stat-lbl">Saved Annually in Infrastructure</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val gradient-text-blue">10TB+</span>
+          <span class="stat-lbl">Monthly Data Pipelines</span>
+        </div>
+        <div class="stat-item alt">
+          <span class="stat-val gradient-text-orange">30,000+</span>
+          <span class="stat-lbl">Users Served Globally</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack Section -->
+  <section id="tech" class="container">
+    <div class="section-header">
+      <span class="section-label">// 02. Skills</span>
+      <h2 class="section-title">Technical Expertise</h2>
+    </div>
+
+    <!-- Interactive Tabs -->
+    <div class="tech-tabs">
+      <button class="tab-btn" [class.active]="activeTab() === 'backend'" (click)="setActiveTab('backend')">Backend</button>
+      <button class="tab-btn" [class.active]="activeTab() === 'cloud'" (click)="setActiveTab('cloud')">Cloud & Infra</button>
+      <button class="tab-btn" [class.active]="activeTab() === 'databases'" (click)="setActiveTab('databases')">Databases</button>
+      <button class="tab-btn" [class.active]="activeTab() === 'devops'" (click)="setActiveTab('devops')">DevOps/CI-CD</button>
+      <button class="tab-btn" [class.active]="activeTab() === 'integrations'" (click)="setActiveTab('integrations')">Integrations & UI</button>
+    </div>
+
+    <!-- Tab Contents -->
+    <div [ngSwitch]="activeTab()">
+      <!-- Backend Tab -->
+      <div *ngSwitchCase="'backend'" class="tech-grid">
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <span class="tech-name">Java</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
+          </div>
+          <span class="tech-name">Spring Boot</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+          </div>
+          <span class="tech-name">Microservices</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+          </div>
+          <span class="tech-name">REST APIs</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M4 12a8 8 0 018-8v16a8 8 0 01-8-8z"/></svg>
+          </div>
+          <span class="tech-name">Apache Kafka</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <span class="tech-name">Redis</span>
+        </div>
+      </div>
+
+      <!-- Cloud Tab -->
+      <div *ngSwitchCase="'cloud'" class="tech-grid">
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+          </div>
+          <span class="tech-name">AWS Services</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6"></path></svg>
+          </div>
+          <span class="tech-name">AWS RDS & Aurora</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          </div>
+          <span class="tech-name">AWS ECS & ECR</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <span class="tech-name">AWS Lambda</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <span class="tech-name">AWS Glue & DMS</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <span class="tech-name">Kubernetes</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+          </div>
+          <span class="tech-name">Docker</span>
+        </div>
+      </div>
+
+      <!-- Databases Tab -->
+      <div *ngSwitchCase="'databases'" class="tech-grid">
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6"></path></svg>
+          </div>
+          <span class="tech-name">PostgreSQL</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6"></path></svg>
+          </div>
+          <span class="tech-name">MongoDB</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6"></path></svg>
+          </div>
+          <span class="tech-name">Apache Iceberg</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6"></path></svg>
+          </div>
+          <span class="tech-name">Amazon Aurora</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6"></path></svg>
+          </div>
+          <span class="tech-name">MS-SQL Server</span>
+        </div>
+      </div>
+
+      <!-- DevOps Tab -->
+      <div *ngSwitchCase="'devops'" class="tech-grid">
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10 10 0 0 1-10 10A10 10 0 0 1 2 12a10 10 0 0 1 10-10 10 10 0 0 1 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg>
+          </div>
+          <span class="tech-name">Jenkins</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 2.15l-6.9 6.9a6 6 0 0 1-2.15 7.94l3.77-3.77a1 1 0 0 0 0-1.4l-1.6-1.6a1 1 0 0 0-1.4 0l-3.77 3.77a6 6 0 0 1 7.94-2.15l6.9-6.9a6 6 0 0 1 2.15-7.94z"/></svg>
+          </div>
+          <span class="tech-name">Ansible</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+          </div>
+          <span class="tech-name">GitHub Actions</span>
+        </div>
+      </div>
+
+      <!-- Integrations Tab -->
+      <div *ngSwitchCase="'integrations'" class="tech-grid">
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          </div>
+          <span class="tech-name">React</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          </div>
+          <span class="tech-name">React Native</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+          </div>
+          <span class="tech-name">Razorpay</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+          </div>
+          <span class="tech-name">Salesforce CRM</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+          </div>
+          <span class="tech-name">HubSpot API</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Experience Section -->
+  <section id="experience" class="container">
+    <div class="section-header">
+      <span class="section-label">// 03. History</span>
+      <h2 class="section-title">Professional Experience</h2>
+    </div>
+
+    <div class="timeline-container">
+      <!-- Item 1: MindWise Technologies (Senior SE) -->
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-header">
+          <div>
+            <h3 class="timeline-role">Senior Software Engineer</h3>
+            <span class="timeline-company">MindWise Technologies</span>
+          </div>
+          <span class="timeline-date">Apr 2026 – Present</span>
+        </div>
+        <div class="timeline-desc">
+          <p>
+            Leading development on high-criticality healthcare product backend systems, orchestrating large-scale cloud data workflows.
+          </p>
+          <ul>
+            <li>Architected and implemented a secure AWS S3 data lakehouse using Apache Iceberg, streamlining analytics and querying.</li>
+            <li>Created automated infrastructure and CI/CD pipelines to ensure continuous, error-free product deployments.</li>
+            <li>Mentored junior engineers and designed database schema migrations with zero-downtime guidelines.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Item 2: MindWise Technologies (Software Engineer) -->
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-header">
+          <div>
+            <h3 class="timeline-role">Software Engineer</h3>
+            <span class="timeline-company">MindWise Technologies</span>
+          </div>
+          <span class="timeline-date">Jan 2024 – Apr 2026</span>
+        </div>
+        <div class="timeline-desc">
+          <p>
+            Developed core features for a clinical health-tech application using Java, Spring Boot, and PostgreSQL microservices.
+          </p>
+          <ul>
+            <li>Optimized slow database queries in PostgreSQL, improving response time of patient data lookups by 35%.</li>
+            <li>Integrated Kafka pipelines for real-time messaging and event-driven logging across 4 microservices.</li>
+            <li>Wrote clean, modular REST APIs and automated unit tests to support new user management flows.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Item 3: AppVin Technologies / Moove -->
+      <div class="timeline-item orange-dot">
+        <div class="timeline-dot"></div>
+        <div class="timeline-header">
+          <div>
+            <h3 class="timeline-role">Software Engineer</h3>
+            <span class="timeline-company">AppVin Technologies / Moove</span>
+          </div>
+          <span class="timeline-date">Aug – Dec 2023</span>
+        </div>
+        <div class="timeline-desc">
+          <p>
+            Contributed to a high-volume mobility Fintech product deployed across 12 global markets.
+          </p>
+          <ul>
+            <li>Analyzed AWS cloud architecture and pruned under-utilized RDS, EC2, and S3 resources, saving $24,000 annually.</li>
+            <li>Ensured highly available financial transaction services using Spring Boot and AWS Aurora PostgreSQL.</li>
+            <li>Assisted in setting up Jenkins pipelines and Docker files for microservice containerization.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Item 4: CardByte -->
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-header">
+          <div>
+            <h3 class="timeline-role">Software Engineer</h3>
+            <span class="timeline-company">CardByte</span>
+          </div>
+          <span class="timeline-date">May 2022 – Aug 2023</span>
+        </div>
+        <div class="timeline-desc">
+          <p>
+            Engineered enterprise SaaS tools for digital contact management and business relationship networking.
+          </p>
+          <ul>
+            <li>Stepped up to lead the backend engineering team for 4 months as interim lead, coordinating sprints and deployments.</li>
+            <li>Designed a MongoDB and Redis-based caching layer that decreased feed-loading latency by 150ms.</li>
+            <li>Successfully built and shipped the integration module for Salesforce and HubSpot CRM platforms.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Item 5: Azu -->
+      <div class="timeline-item orange-dot">
+        <div class="timeline-dot"></div>
+        <div class="timeline-header">
+          <div>
+            <h3 class="timeline-role">Full-stack Developer</h3>
+            <span class="timeline-company">Azu</span>
+          </div>
+          <span class="timeline-date">Dec 2021 – May 2022</span>
+        </div>
+        <div class="timeline-desc">
+          <p>
+            Developed full-stack web and mobile features for a retail-focused fintech startup.
+          </p>
+          <ul>
+            <li>Integrated Razorpay payment gateways for secure in-app transactions and invoicing.</li>
+            <li>Implemented Geolocation APIs to map nearby retail partners, improving customer checkout experiences.</li>
+            <li>Built responsive frontend screens in React and React Native, binding them to Spring Boot backends.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Certifications Section -->
+  <section id="certifications" class="container">
+    <div class="section-header">
+      <span class="section-label">// 04. Credentials</span>
+      <h2 class="section-title">Certifications & Learning</h2>
+    </div>
+
+    <div class="certs-grid">
+      <!-- Cert 1 -->
+      <div class="cert-card">
+        <div>
+          <div class="cert-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3 class="cert-title">AWS Certified Solutions Architect – Associate</h3>
+        </div>
+        <span class="cert-issuer">Amazon Web Services</span>
+      </div>
+
+      <!-- Cert 2 -->
+      <div class="cert-card">
+        <div>
+          <div class="cert-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+          </div>
+          <h3 class="cert-title">Android P with Machine Learning Apps</h3>
+        </div>
+        <span class="cert-issuer">Udemy / Google Developer Experts</span>
+      </div>
+
+      <!-- Cert 3 -->
+      <div class="cert-card">
+        <div>
+          <div class="cert-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          </div>
+          <h3 class="cert-title">Dart Programming Language</h3>
+        </div>
+        <span class="cert-issuer">Google Developer Group</span>
+      </div>
+
+      <!-- Cert 4 -->
+      <div class="cert-card">
+        <div>
+          <div class="cert-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          </div>
+          <h3 class="cert-title">React Native Design & Architecture</h3>
+        </div>
+        <span class="cert-issuer">Udemy Professional</span>
+      </div>
+
+      <!-- Cert 5 -->
+      <div class="cert-card">
+        <div>
+          <div class="cert-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
+          </div>
+          <h3 class="cert-title">NDG Linux Unhatched</h3>
+        </div>
+        <span class="cert-issuer">Cisco Networking Academy</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="container">
+    <div class="section-header">
+      <span class="section-label">// 05. Connection</span>
+      <h2 class="section-title">Get In Touch</h2>
+    </div>
+
+    <div class="contact-grid">
+      <!-- Contact Info -->
+      <div class="contact-info">
+        <p class="contact-intro">
+          I am always open to discussing new backend engineering projects, architectural consultancies, or full-time opportunities with product-led companies.
+        </p>
+        
+        <div class="contact-methods">
+          <!-- Email -->
+          <div class="contact-method-item">
+            <div class="method-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <div class="method-details">
+              <h4>Email</h4>
+              <p><a href="mailto:ka09934147002@gmail.com">ka09934147002@gmail.com</a></p>
+            </div>
+          </div>
+          
+          <!-- Phone -->
+          <div class="contact-method-item">
+            <div class="method-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            </div>
+            <div class="method-details">
+              <h4>Phone</h4>
+              <p><a href="tel:+918700123737">+91 8700123737</a></p>
+            </div>
+          </div>
+
+          <!-- LinkedIn -->
+          <div class="contact-method-item">
+            <div class="method-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+            </div>
+            <div class="method-details">
+              <h4>LinkedIn</h4>
+              <p><a href="https://linkedin.com/in/kumaraditya21" target="_blank" rel="noopener">linkedin.com/in/kumaraditya21</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Form -->
+      <div>
+        @if (formStatus() === 'success') {
+          <div class="form-success-alert">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h3>Message Sent Successfully!</h3>
+            <p>Thank you for reaching out. I'll get back to you as soon as possible.</p>
+          </div>
+        } @else {
+          <form (submit)="onSubmit($event)" class="contact-form">
+            <!-- Name -->
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input 
+                type="text" 
+                id="name"
+                [ngModel]="contactForm.name()"
+                (ngModelChange)="contactForm.name.set($event)"
+                name="name"
+                class="form-control"
+                [class.error]="formErrors.name()"
+                placeholder="Alex Morgan">
+              @if (formErrors.name()) {
+                <span class="error-message">Name is required</span>
+              }
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input 
+                type="email" 
+                id="email"
+                [ngModel]="contactForm.email()"
+                (ngModelChange)="contactForm.email.set($event)"
+                name="email"
+                class="form-control"
+                [class.error]="formErrors.email()"
+                placeholder="alex@example.com">
+              @if (formErrors.email()) {
+                <span class="error-message">Please enter a valid email address</span>
+              }
+            </div>
+
+            <!-- Message -->
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea 
+                id="message"
+                [ngModel]="contactForm.message()"
+                (ngModelChange)="contactForm.message.set($event)"
+                name="message"
+                class="form-control"
+                [class.error]="formErrors.message()"
+                placeholder="Hey Kumar, let's connect..."></textarea>
+              @if (formErrors.message()) {
+                <span class="error-message">Message is required</span>
+              }
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary" [disabled]="formStatus() === 'sending'">
+              @if (formStatus() === 'sending') {
+                Sending...
+              } @else {
+                Send Message
+              }
+            </button>
+          </form>
+        }
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container footer-container">
+    <p>&copy; 2026 Kumar Aditya. All Rights Reserved.</p>
+    <div class="tech-by">
+      Built with <span>Angular 22</span> &amp; custom CSS
+    </div>
+  </div>
+</footer>
