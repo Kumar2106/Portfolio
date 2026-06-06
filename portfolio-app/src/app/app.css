@@ -850,18 +850,33 @@ footer .tech-by span {
 /* Range input styling overrides */
 .range-slider {
   -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 18px;
+  background: transparent;
+  outline: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Chrome, Safari, Edge, Opera Track */
+.range-slider::-webkit-slider-runnable-track {
   width: 100%;
   height: 6px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.1);
-  outline: none;
+  border: none;
   transition: background var(--transition-fast);
 }
 
-body.light-theme .range-slider {
-  background: rgba(0, 0, 0, 0.1);
+body.light-theme .range-slider::-webkit-slider-runnable-track {
+  background: #cbd5e1;
 }
 
+/* Chrome, Safari, Edge, Opera Thumb */
 .range-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -872,9 +887,49 @@ body.light-theme .range-slider {
   cursor: pointer;
   box-shadow: 0 0 8px var(--color-primary-glow);
   transition: transform var(--transition-fast);
+  margin-top: -6px; /* Center thumb over 6px track */
+}
+
+body.light-theme .range-slider::-webkit-slider-thumb {
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
 }
 
 .range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Firefox Track */
+.range-slider::-moz-range-track {
+  width: 100%;
+  height: 6px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  border: none;
+  transition: background var(--transition-fast);
+}
+
+body.light-theme .range-slider::-moz-range-track {
+  background: #cbd5e1;
+}
+
+/* Firefox Thumb */
+.range-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--color-primary-glow);
+  transition: transform var(--transition-fast);
+}
+
+body.light-theme .range-slider::-moz-range-thumb {
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+}
+
+.range-slider::-moz-range-thumb:hover {
   transform: scale(1.2);
 }
 
@@ -1112,5 +1167,196 @@ body.light-theme .range-slider {
   height: 100%;
   background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   transition: width 0.15s ease-out;
+}
+
+/* Theme Selection Prompt Overlay */
+.theme-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4, 6, 12, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  opacity: 1;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1.5rem;
+}
+
+.theme-prompt-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.theme-prompt-modal {
+  background: #0d1222;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  padding: 2.5rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 229, 255, 0.05);
+  text-align: center;
+  animation: modalScaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+@keyframes modalScaleIn {
+  from {
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.theme-prompt-header h3 {
+  font-family: var(--font-sans);
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
+}
+
+.theme-prompt-header p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.theme-prompt-logo {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #9ca3af;
+}
+
+.theme-prompt-logo span {
+  color: var(--color-primary);
+}
+
+.theme-prompt-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .theme-prompt-options {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .theme-prompt-modal {
+    padding: 1.75rem;
+  }
+}
+
+.theme-prompt-btn {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  transition: all var(--transition-normal);
+  color: var(--text-secondary);
+  outline: none;
+}
+
+.theme-prompt-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-4px);
+}
+
+.theme-prompt-btn.dark-btn:hover {
+  border-color: #00e5ff;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+  color: #ffffff;
+}
+
+.theme-prompt-btn.light-btn:hover {
+  border-color: #ff9900;
+  box-shadow: 0 0 20px rgba(255, 153, 0, 0.15);
+  color: #ffffff;
+}
+
+.theme-btn-preview {
+  width: 100%;
+  height: 80px;
+  border-radius: 6px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all var(--transition-normal);
+}
+
+.dark-preview {
+  background: #070a13;
+}
+
+.light-preview {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.preview-dots {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.preview-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.preview-dots span.red { background: #ef4444; }
+.preview-dots span.yellow { background: #f59e0b; }
+.preview-dots span.green { background: #10b981; }
+
+.preview-card {
+  flex-grow: 1;
+  border-radius: 4px;
+}
+
+.dark-preview .preview-card {
+  background: #0d1222;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.light-preview .preview-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.theme-btn-text {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+/* Blur underlying main content when modal is active */
+body.modal-active {
+  overflow: hidden;
 }
 

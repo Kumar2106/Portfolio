@@ -11,6 +11,10 @@ import { FormsModule } from '@angular/forms';
 export class App implements OnDestroy {
   // Theme state
   protected readonly theme = signal<'dark' | 'light'>('dark');
+  
+  // Theme selection prompt overlay states
+  protected readonly showThemePrompt = signal<boolean>(false);
+  protected readonly themePromptClosing = signal<boolean>(false);
 
   // Tech Stack Tabs
   protected readonly activeTab = signal<'backend' | 'cloud' | 'databases' | 'devops' | 'integrations'>('backend');
@@ -70,6 +74,24 @@ export class App implements OnDestroy {
   };
 
   constructor(@Inject(DOCUMENT) private document: Document) {
+    // Check if the user has a saved theme preference
+    let savedTheme: string | null = null;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
+        savedTheme = window.localStorage.getItem('user-theme');
+      }
+    } catch (e) {
+      // Suppress logs in testing environments
+    }
+
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      this.theme.set(savedTheme);
+      this.showThemePrompt.set(false);
+    } else {
+      // Show theme prompt modal on first visit
+      this.showThemePrompt.set(true);
+    }
+
     // Sync theme signal to body class
     effect(() => {
       const currentTheme = this.theme();
@@ -81,6 +103,17 @@ export class App implements OnDestroy {
       }
     });
 
+    // Sync theme prompt state to body scroll lock
+    effect(() => {
+      const active = this.showThemePrompt();
+      const body = this.document.body;
+      if (active) {
+        body.classList.add('modal-active');
+      } else {
+        body.classList.remove('modal-active');
+      }
+    });
+
     // Populate initial API response
     this.updateApiResponse();
   }
@@ -89,9 +122,36 @@ export class App implements OnDestroy {
     this.clearPipelineTimers();
   }
 
-  // Toggle theme method
+  // Toggle theme method and persist choice
   protected toggleTheme(): void {
-    this.theme.set(this.theme() === 'dark' ? 'light' : 'dark');
+    const nextTheme = this.theme() === 'dark' ? 'light' : 'dark';
+    this.theme.set(nextTheme);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.setItem === 'function') {
+        window.localStorage.setItem('user-theme', nextTheme);
+      }
+    } catch (e) {
+      // Suppress logs in testing environments
+    }
+  }
+
+  // Handle theme choice from the modal prompt
+  protected selectInitialTheme(selected: 'dark' | 'light'): void {
+    this.theme.set(selected);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.setItem === 'function') {
+        window.localStorage.setItem('user-theme', selected);
+      }
+    } catch (e) {
+      // Suppress logs in testing environments
+    }
+
+    // Trigger smooth fade closing animation
+    this.themePromptClosing.set(true);
+    setTimeout(() => {
+      this.showThemePrompt.set(false);
+      this.themePromptClosing.set(false);
+    }, 400); // Matches CSS transition duration
   }
 
   // Method to set active tab
