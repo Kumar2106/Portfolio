@@ -16,11 +16,17 @@ export class App implements OnDestroy {
   protected readonly showThemePrompt = signal<boolean>(false);
   protected readonly themePromptClosing = signal<boolean>(false);
 
+  // Mobile menu state
+  protected readonly mobileMenuOpen = signal<boolean>(false);
+
   // Tech Stack Tabs
   protected readonly activeTab = signal<'backend' | 'cloud' | 'databases' | 'devops' | 'integrations'>('backend');
 
   // Playground Tab State
   protected readonly activePlaygroundTab = signal<'architecture' | 'calculator' | 'api' | 'pipeline'>('architecture');
+
+  // Interactive Hosting Diagram Highlight State
+  protected readonly hoveredHostingNode = signal<string | null>(null);
 
   // --- Calculator Widget States ---
   protected readonly ec2Instances = signal<number>(8);
@@ -103,9 +109,9 @@ export class App implements OnDestroy {
       }
     });
 
-    // Sync theme prompt state to body scroll lock
+    // Sync theme prompt and mobile menu state to body scroll lock
     effect(() => {
-      const active = this.showThemePrompt();
+      const active = this.showThemePrompt() || this.mobileMenuOpen();
       const body = this.document.body;
       if (active) {
         body.classList.add('modal-active');
@@ -152,6 +158,15 @@ export class App implements OnDestroy {
       this.showThemePrompt.set(false);
       this.themePromptClosing.set(false);
     }, 400); // Matches CSS transition duration
+  }
+
+  // Mobile Menu actions
+  protected toggleMobileMenu(): void {
+    this.mobileMenuOpen.update(v => !v);
+  }
+
+  protected closeMobileMenu(): void {
+    this.mobileMenuOpen.set(false);
   }
 
   // Method to set active tab

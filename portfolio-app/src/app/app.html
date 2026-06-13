@@ -1,16 +1,17 @@
-<header>
+<header [class.mobile-menu-active]="mobileMenuOpen()">
   <div class="container nav-container">
     <div class="logo">
       <span>&lt;</span>kumar.aditya<span>/&gt;</span>
     </div>
     <div class="nav-wrapper">
-      <nav>
+      <nav [class.mobile-open]="mobileMenuOpen()">
         <ul>
-          <li><a href="#about">About</a></li>
-          <li><a href="#tech">Skills</a></li>
-          <li><a href="#experience">Experience</a></li>
-          <li><a href="#certifications">Certificates</a></li>
-          <li><a href="#contact">Contact</a></li>
+          <li><a href="#about" (click)="closeMobileMenu()">About</a></li>
+          <li><a href="#tech" (click)="closeMobileMenu()">Skills</a></li>
+          <li><a href="#experience" (click)="closeMobileMenu()">Experience</a></li>
+          <li><a href="#certifications" (click)="closeMobileMenu()">Certificates</a></li>
+          <li><a href="#hosting" (click)="closeMobileMenu()">Hosting</a></li>
+          <li><a href="#contact" (click)="closeMobileMenu()">Contact</a></li>
         </ul>
       </nav>
       <button class="theme-toggle" (click)="toggleTheme()" aria-label="Toggle theme">
@@ -18,6 +19,13 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
         } @else {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        }
+      </button>
+      <button class="mobile-menu-toggle" (click)="toggleMobileMenu()" [attr.aria-expanded]="mobileMenuOpen()" aria-label="Toggle navigation menu">
+        @if (mobileMenuOpen()) {
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        } @else {
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         }
       </button>
     </div>
@@ -339,8 +347,8 @@
           </div>
           
           <div class="arch-diagram-wrapper">
-            <!-- Animated SVG Flow -->
-            <svg viewBox="0 0 800 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="arch-svg">
+            <!-- Animated SVG Flow: Application Flow -->
+            <svg *ngIf="activePlaygroundTab() === 'architecture'" viewBox="0 0 800 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="arch-svg">
               <!-- Grid Connectors (Paths) -->
               <path d="M70 120 H180" stroke="var(--color-primary)" stroke-width="2" class="flow-path" />
               <path d="M220 120 H340" stroke="var(--color-primary)" stroke-width="2" class="flow-path" />
@@ -411,6 +419,8 @@
             </div>
           </div>
         </div>
+
+
 
         <!-- Widget 2: AWS Cost Savings Calculator -->
         <div *ngIf="activePlaygroundTab() === 'calculator'" class="calculator-wrapper">
@@ -756,6 +766,225 @@
           <h3 class="cert-title">NDG Linux Unhatched</h3>
         </div>
         <span class="cert-issuer">Cisco Networking Academy</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Portfolio Deployment Section -->
+  <section id="hosting" class="container">
+    <div class="section-header">
+      <span class="section-label">// 04a. Infrastructure</span>
+      <h2 class="section-title">Portfolio AWS Architecture</h2>
+    </div>
+
+    <div class="hosting-wrapper">
+      <div class="hosting-intro-card">
+        <p>
+          This website (<strong>aditya.weinventify.com</strong>) is hosted entirely on AWS using a highly-available, secure, serverless static architecture. Hover over nodes in the interactive diagram or the details cards below to inspect the real-world deployment details.
+        </p>
+      </div>
+
+      <div class="arch-diagram-wrapper" style="margin-bottom: 2rem;">
+        <svg viewBox="0 0 800 300" fill="none" xmlns="http://www.w3.org/2000/svg" class="arch-svg">
+          <!-- Flow Connections (Paths) -->
+          <!-- Client to Route 53 (Query) -->
+          <path id="path-dns-query" d="M140 130 C180 130, 200 65, 210 65" 
+                class="flow-path" 
+                [class.active-path]="hoveredHostingNode() === 'client' || hoveredHostingNode() === 'route53'" />
+          
+          <!-- Route 53 to Client (Response) -->
+          <path id="path-dns-reply" d="M210 80 C180 80, 160 115, 140 115" 
+                class="flow-path alt" 
+                [class.active-path]="hoveredHostingNode() === 'client' || hoveredHostingNode() === 'route53'" />
+
+          <!-- Client to CloudFront (HTTPS GET) -->
+          <path id="path-https" d="M140 145 H380" 
+                class="flow-path" 
+                [class.active-path]="hoveredHostingNode() === 'client' || hoveredHostingNode() === 'cloudfront'" />
+
+          <!-- ACM to CloudFront (SSL Binding) -->
+          <path id="path-ssl" d="M435 210 V190" 
+                class="flow-path alt" 
+                [class.active-path]="hoveredHostingNode() === 'acm' || hoveredHostingNode() === 'cloudfront'" />
+
+          <!-- CloudFront to S3 (Secure OAC Read) -->
+          <path id="path-s3" d="M490 145 H640" 
+                class="flow-path" 
+                [class.active-path]="hoveredHostingNode() === 'cloudfront' || hoveredHostingNode() === 's3'" />
+
+          <!-- Flow Labels -->
+          <text x="175" y="85" font-size="8" text-anchor="middle" class="path-label">DNS Lookup</text>
+          <text x="175" y="105" font-size="8" text-anchor="middle" class="path-label alt">IP Resolved</text>
+          <text x="260" y="138" font-size="8.5" text-anchor="middle" class="path-label">HTTPS Request (CNAME)</text>
+          <text x="445" y="202" font-size="8" text-anchor="start" class="path-label alt">SSL Bind</text>
+          <text x="565" y="138" font-size="8.5" text-anchor="middle" class="path-label">Secure OAC Read</text>
+
+          <!-- Nodes -->
+          <!-- 1. Client Browser -->
+          <g class="arch-node"
+             [class.active-glow]="hoveredHostingNode() === 'client'"
+             (mouseenter)="hoveredHostingNode.set('client')"
+             (mouseleave)="hoveredHostingNode.set(null)"
+             tabindex="0">
+            <rect x="40" y="100" width="100" height="90" rx="8" class="node-bg" />
+            <!-- Laptop Icon -->
+            <g transform="translate(78, 112)" class="node-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+            </g>
+            <text x="90" y="156" text-anchor="middle" class="node-title">User Browser</text>
+            <text x="90" y="174" text-anchor="middle" class="node-subtitle">https-client</text>
+          </g>
+
+          <!-- 2. Route 53 -->
+          <g class="arch-node"
+             [class.active-glow]="hoveredHostingNode() === 'route53'"
+             (mouseenter)="hoveredHostingNode.set('route53')"
+             (mouseleave)="hoveredHostingNode.set(null)"
+             tabindex="0">
+            <rect x="210" y="20" width="100" height="90" rx="8" class="node-bg" />
+            <!-- Globe/DNS Icon -->
+            <g transform="translate(248, 32)" class="node-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+            </g>
+            <text x="260" y="76" text-anchor="middle" class="node-title">Route 53</text>
+            <text x="260" y="94" text-anchor="middle" class="node-subtitle">DNS Server</text>
+            <!-- Badge -->
+            <rect x="238" y="12" width="44" height="12" rx="4" fill="#10b981" />
+            <text x="260" y="21" font-size="7.5" fill="#ffffff" text-anchor="middle" font-weight="600" font-family="var(--font-sans)">99.999%</text>
+          </g>
+
+          <!-- 3. CloudFront CDN -->
+          <g class="arch-node"
+             [class.active-glow]="hoveredHostingNode() === 'cloudfront'"
+             (mouseenter)="hoveredHostingNode.set('cloudfront')"
+             (mouseleave)="hoveredHostingNode.set(null)"
+             tabindex="0">
+            <rect x="380" y="100" width="110" height="90" rx="8" class="node-bg" />
+            <!-- CloudFront CDN Icon -->
+            <g transform="translate(423, 112)" class="node-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+            </g>
+            <text x="435" y="156" text-anchor="middle" class="node-title">CloudFront</text>
+            <text x="435" y="174" text-anchor="middle" class="node-subtitle">Global CDN</text>
+            <!-- Badge -->
+            <rect x="413" y="92" width="44" height="12" rx="4" fill="#3b82f6" />
+            <text x="435" y="101" font-size="7.5" fill="#ffffff" text-anchor="middle" font-weight="600" font-family="var(--font-sans)">CACHED</text>
+          </g>
+
+          <!-- 4. ACM Certificate -->
+          <g class="arch-node alt"
+             [class.active-glow]="hoveredHostingNode() === 'acm'"
+             (mouseenter)="hoveredHostingNode.set('acm')"
+             (mouseleave)="hoveredHostingNode.set(null)"
+             tabindex="0">
+            <rect x="380" y="210" width="110" height="80" rx="8" class="node-bg" />
+            <!-- Shield/Lock Icon -->
+            <g transform="translate(423, 220)" class="node-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <rect x="9" y="11" width="6" height="5" rx="1" fill="currentColor" opacity="0.3" />
+                <path d="M10 11V9a2 2 0 0 1 4 0v2" />
+              </svg>
+            </g>
+            <text x="435" y="258" text-anchor="middle" class="node-title">AWS ACM</text>
+            <text x="435" y="276" text-anchor="middle" class="node-subtitle">SSL Certificate</text>
+            <!-- Badge -->
+            <rect x="415" y="202" width="40" height="12" rx="4" fill="#f59e0b" />
+            <text x="435" y="211" font-size="7.5" fill="#ffffff" text-anchor="middle" font-weight="600" font-family="var(--font-sans)">HTTPS</text>
+          </g>
+
+          <!-- 5. Amazon S3 -->
+          <g class="arch-node"
+             [class.active-glow]="hoveredHostingNode() === 's3'"
+             (mouseenter)="hoveredHostingNode.set('s3')"
+             (mouseleave)="hoveredHostingNode.set(null)"
+             tabindex="0">
+            <rect x="640" y="100" width="110" height="90" rx="8" class="node-bg" />
+            <!-- S3 Bucket Icon -->
+            <g transform="translate(683, 112)" class="node-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+              </svg>
+            </g>
+            <text x="695" y="156" text-anchor="middle" class="node-title">Amazon S3</text>
+            <text x="695" y="174" text-anchor="middle" class="node-subtitle">Private Origin</text>
+            <!-- Badge -->
+            <rect x="670" y="92" width="50" height="12" rx="4" fill="#ef4444" />
+            <text x="695" y="101" font-size="7.5" fill="#ffffff" text-anchor="middle" font-weight="600" font-family="var(--font-sans)">OAC PRIVATE</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Detail Cards Grid -->
+      <div class="hosting-cards-grid">
+        <div class="hosting-card" 
+             [class.active]="hoveredHostingNode() === 'client'"
+             (mouseenter)="hoveredHostingNode.set('client')"
+             (mouseleave)="hoveredHostingNode.set(null)">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            User Browser
+          </h4>
+          <p>Initiates a secure connection to https://aditya.weinventify.com. Receives static assets cached globally for sub-second page rendering times.</p>
+        </div>
+
+        <div class="hosting-card" 
+             [class.active]="hoveredHostingNode() === 'route53'"
+             (mouseenter)="hoveredHostingNode.set('route53')"
+             (mouseleave)="hoveredHostingNode.set(null)">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Route 53 DNS
+          </h4>
+          <p>Resolves the custom subdomain aditya.weinventify.com using AWS's highly-available DNS, routing traffic directly to CloudFront via CNAME/Alias records.</p>
+        </div>
+
+        <div class="hosting-card" 
+             [class.active]="hoveredHostingNode() === 'cloudfront'"
+             (mouseenter)="hoveredHostingNode.set('cloudfront')"
+             (mouseleave)="hoveredHostingNode.set(null)">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            CloudFront CDN
+          </h4>
+          <p>Caches website files at edge locations globally. Minimizes latency to near-zero, offloads origin requests, and mitigates DDoS attacks at the edge.</p>
+        </div>
+
+        <div class="hosting-card alt" 
+             [class.active]="hoveredHostingNode() === 'acm'"
+             (mouseenter)="hoveredHostingNode.set('acm')"
+             (mouseleave)="hoveredHostingNode.set(null)">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            AWS ACM
+          </h4>
+          <p>Automatically manages and provisions the SSL/TLS certificate used by CloudFront, ensuring all page transactions are encrypted via secure HTTPS.</p>
+        </div>
+
+        <div class="hosting-card" 
+             [class.active]="hoveredHostingNode() === 's3'"
+             (mouseenter)="hoveredHostingNode.set('s3')"
+             (mouseleave)="hoveredHostingNode.set(null)">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+            Amazon S3 Bucket
+          </h4>
+          <p>Stores the built Angular SPA bundle. All public read access is disabled; files can only be read by CloudFront using secure Origin Access Control (OAC).</p>
+        </div>
       </div>
     </div>
   </section>

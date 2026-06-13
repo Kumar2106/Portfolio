@@ -13,6 +13,11 @@
   --color-secondary: #ff9900;    /* AWS Orange */
   --color-secondary-glow: rgba(255, 153, 0, 0.15);
   
+  --btn-primary-text: #070a13;
+  --btn-primary-hover-bg: #33ebff;
+  --btn-primary-shadow: rgba(0, 229, 255, 0.25);
+  --btn-primary-hover-shadow: rgba(0, 229, 255, 0.4);
+  
   --text-primary: #f3f4f6;       /* Gray 100 */
   --text-secondary: #9ca3af;     /* Gray 400 */
   --text-muted: #6b7280;         /* Gray 500 */
@@ -59,6 +64,11 @@ body.light-theme {
   --color-primary-glow: rgba(2, 132, 199, 0.1);
   --color-secondary: #d97706;    /* amber 600 */
   --color-secondary-glow: rgba(217, 119, 6, 0.1);
+  
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover-bg: #0369a1; /* sky 700 */
+  --btn-primary-shadow: rgba(2, 132, 199, 0.20);
+  --btn-primary-hover-shadow: rgba(2, 132, 199, 0.35);
   
   --text-primary: #0f172a;       /* slate 900 */
   --text-secondary: #475569;     /* slate 600 */
