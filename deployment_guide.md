@@ -165,3 +165,109 @@ If you have AWS CLI configured locally (`aws configure`), you can automate the O
 ./deploy-aws.sh <your-s3-bucket-name>
 ```
 This script will build the bundle, create the bucket, disable blocks, apply bucket policies, configure hosting parameters, and upload files.
+
+---
+
+## Part 4: Automated CI/CD Deployment with GitHub Actions (OIDC)
+
+For secure, production-grade deployments, you should automate your build and deploy pipeline using **GitHub Actions** and **AWS OpenID Connect (OIDC)**. This removes the need to store long-lived AWS access keys (Access Key ID and Secret Access Key) in GitHub.
+
+### Step 1: Create IAM OIDC Identity Provider in AWS
+
+First, configure AWS to trust GitHub's OIDC Identity Provider (IdP):
+1. Open the **AWS IAM Console** -> go to **Identity Providers** -> click **Add provider**.
+2. Select **OpenID Connect**.
+3. Configure settings:
+   - **Provider URL**: `https://token.actions.githubusercontent.com` (click **Get thumbprint** to validate).
+   - **Audience**: `sts.amazonaws.com`.
+4. Click **Add provider**.
+
+### Step 2: Create IAM Role with OIDC Trust Policy
+
+Create an IAM Role that GitHub Actions will assume to deploy your files:
+1. Go to **IAM** -> **Roles** -> click **Create role**.
+2. Select **Custom trust policy** and paste the following policy JSON. 
+   
+   > [!IMPORTANT]
+   > Replace `ACCOUNT_ID` with your actual 12-digit AWS Account ID, and ensure the repository is matched to `Kumar2106/Portfolio`:
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Principal": {
+           "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+         },
+         "Action": "sts:AssumeRoleWithWebIdentity",
+         "Condition": {
+           "StringEquals": {
+             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+           },
+           "StringLike": {
+             "token.actions.githubusercontent.com:sub": "repo:Kumar2106/Portfolio:ref:refs/heads/main"
+           }
+         }
+       }
+     ]
+   }
+   ```
+3. Click **Next**.
+
+### Step 3: Attach IAM Permissions Policy
+
+Attach a policy to the role allowing it to upload to S3 and invalidate the CloudFront CDN cache:
+1. Under **Permissions policies**, click **Create policy**.
+2. Choose **JSON** editor and paste the following permissions policy (replace `YOUR_S3_BUCKET_NAME`, `ACCOUNT_ID`, and `YOUR_CLOUDFRONT_DISTRIBUTION_ID` with your details):
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": [
+           "s3:PutObject",
+           "s3:GetObject",
+           "s3:ListBucket",
+           "s3:DeleteObject"
+         ],
+         "Resource": [
+           "arn:aws:s3:::YOUR_S3_BUCKET_NAME",
+           "arn:aws:s3:::YOUR_S3_BUCKET_NAME/*"
+         ]
+       },
+       {
+         "Effect": "Allow",
+         "Action": [
+           "cloudfront:CreateInvalidation",
+           "cloudfront:GetInvalidation"
+         ],
+         "Resource": "arn:aws:cloudfront::ACCOUNT_ID:distribution/YOUR_CLOUDFRONT_DISTRIBUTION_ID"
+       }
+     ]
+   }
+   ```
+3. Save the policy as `GitHubActionsPortfolioDeployPolicy`.
+4. Go back to the Role creation window, select your new policy, click **Next**, name the role (e.g., `GitHubActionsPortfolioDeployRole`), and click **Create role**.
+5. Copy the **Role ARN** (e.g., `arn:aws:iam::ACCOUNT_ID:role/GitHubActionsPortfolioDeployRole`).
+
+### Step 4: Configure GitHub Secrets
+
+Add the AWS deployment parameters as secrets in your GitHub repository:
+1. Go to your repository on GitHub (`Kumar2106/Portfolio`).
+2. Go to **Settings** -> **Secrets and variables** -> **Actions** -> click **New repository secret**.
+3. Add the following secrets:
+   - `AWS_ROLE_ARN`: The ARN of your newly created IAM Role (from Step 2).
+   - `AWS_REGION`: The AWS region of your resources (e.g., `us-east-1`).
+   - `S3_BUCKET_NAME`: The name of your static hosting S3 bucket.
+   - `CLOUDFRONT_DISTRIBUTION_ID`: The ID of your CloudFront distribution.
+
+### Step 5: Run the Pipeline
+
+The automated deployment pipeline is defined in `.github/workflows/deploy.yml`. 
+Every time you push or merge code to the `main` branch, the workflow will automatically:
+1. Build your Angular bundle for production.
+2. Securely authenticate with AWS using OIDC.
+3. Sync files to the private S3 bucket.
+4. Trigger a cache invalidation on CloudFront to immediately serve the updated site version to visitors.
