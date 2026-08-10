@@ -1,0 +1,49 @@
+name: Deploy Portfolio to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+# Permissions required to request JWT/OIDC token from GitHub OIDC provider
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './portfolio-app/package-lock.json'
+
+      - name: Install Dependencies
+        run: |
+          cd portfolio-app
+          npm ci
+
+      - name: Build Application
+        run: |
+          cd portfolio-app
+          npm run build
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync portfolio-app/dist/portfolio-app/browser s3://${{ secrets.S3_BUCKET_NAME }} --delete
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
