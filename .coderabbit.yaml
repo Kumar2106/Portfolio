@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+early_access: false
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!package-lock.json"
+    - "!dist/**"
+    - "!**/*.svg"
+    - "!**/*.png"
+    - "!**/*.ico"
+  path_instructions:
+    - path: "portfolio-app/src/**"
+      instructions: |
+        Review with Angular best practices in mind:
+        - Verify use of Angular Signals and modern reactive patterns.
+        - Ensure responsive CSS design standards and proper handling of light/dark theme variables.
+        - Check for clean component separation and avoid unnecessary dependencies.
+    - path: ".github/workflows/**"
+      instructions: |
+        Review CI/CD and deployment workflows:
+        - Ensure GitHub Actions security best practices.
+        - Check that OIDC permissions and role assumptions follow the principle of least privilege.
+        - Ensure no sensitive credentials or AWS secrets are hardcoded.
+
+chat:
+  auto_reply: true

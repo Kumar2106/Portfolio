@@ -1,0 +1,15 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+*.iml
+
+# Local Docker
+docker-compose.yml
+
+# Environment files
+*.env
+*.env.*
+!.env.example
