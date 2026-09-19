@@ -1,0 +1,27 @@
+{
+  "name": "portfolio-iac",
+  "version": "0.1.0",
+  "description": "AWS CDK infrastructure for Kumar Aditya Portfolio",
+  "bin": {
+    "portfolio-infra": "bin/portfolio-infra.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy",
+    "diff": "cdk diff"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "aws-cdk": "^2.180.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.7.3"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.180.0",
+    "constructs": "^10.4.2",
+    "source-map-support": "^0.5.21"
+  }
+}

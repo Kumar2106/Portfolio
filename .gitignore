@@ -13,3 +13,8 @@ docker-compose.yml
 *.env
 *.env.*
 !.env.example
+
+# Build & CDK output
+dist/
+cdk.out/
+

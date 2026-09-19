@@ -13,18 +13,25 @@ reviews:
     enabled: true
     drafts: false
   path_filters:
-    - "!package-lock.json"
-    - "!dist/**"
+    - "!**/package-lock.json"
+    - "!**/dist/**"
+    - "!**/cdk.out/**"
     - "!**/*.svg"
     - "!**/*.png"
     - "!**/*.ico"
   path_instructions:
-    - path: "portfolio-app/src/**"
+    - path: "frontend/src/**"
       instructions: |
         Review with Angular best practices in mind:
         - Verify use of Angular Signals and modern reactive patterns.
         - Ensure responsive CSS design standards and proper handling of light/dark theme variables.
         - Check for clean component separation and avoid unnecessary dependencies.
+    - path: "iac/**"
+      instructions: |
+        Review AWS CDK infrastructure code:
+        - Ensure security best practices: private S3 buckets, blocked public access, SSL enforcement.
+        - Validate CloudFront Origin Access Control (OAC) configuration and SPA error responses (403/404 -> /index.html).
+        - Verify least-privilege IAM policies, proper resource cleanup/removal policies, and secure caching defaults.
     - path: ".github/workflows/**"
       instructions: |
         Review CI/CD and deployment workflows:

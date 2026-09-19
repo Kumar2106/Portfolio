@@ -22,18 +22,18 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: './portfolio-app/package-lock.json'
+          cache-dependency-path: './frontend/package-lock.json'
 
-      - name: Install Dependencies
+      - name: Install Frontend Dependencies
         run: |
-          cd portfolio-app
+          cd frontend
           npm ci
 
-      - name: Build Application
+      - name: Build Frontend Application
         env:
           CI: true
         run: |
-          cd portfolio-app
+          cd frontend
           npm run build
 
       - name: Configure AWS Credentials (OIDC)
@@ -44,7 +44,7 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          aws s3 sync portfolio-app/dist/portfolio-app/browser s3://${{ secrets.S3_BUCKET_NAME }} --delete
+          aws s3 sync frontend/dist/portfolio-app/browser s3://${{ secrets.S3_BUCKET_NAME }} --delete
 
       - name: Invalidate CloudFront Cache
         run: |
