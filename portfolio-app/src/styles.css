@@ -272,3 +272,8 @@ body.light-theme .gradient-text-orange {
   line-height: 1.5;
 }
 
+/* Scroll lock when modal prompt or mobile menu is active */
+body.modal-active {
+  overflow: hidden;
+}
+

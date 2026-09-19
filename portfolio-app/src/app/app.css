@@ -1440,49 +1440,6 @@ footer .tech-by span {
   font-weight: 600;
 }
 
-/* Blur underlying main content when modal is active */
-body.modal-active {
-  overflow: hidden;
-}
-
-/* Architecture Flow Toggle */
-.arch-flow-toggle-group {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.flow-toggle-btn {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  font-weight: 600;
-}
-
-.flow-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-  border-color: var(--color-primary-glow);
-}
-
-body.light-theme .flow-toggle-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.flow-toggle-btn.active {
-  border-color: var(--color-primary);
-  background: var(--color-primary-glow);
-  color: var(--color-primary);
-  box-shadow: 0 0 10px var(--color-primary-glow);
-}
-
 /* --- Portfolio Hosting Standalone Section --- */
 
 .hosting-wrapper {
