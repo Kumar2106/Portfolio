@@ -189,13 +189,16 @@ Attach a least-privilege policy allowing S3 synchronization and CloudFront cache
 Add these repository secrets in GitHub (`Settings` -> `Secrets and variables` -> `Actions`):
 - `AWS_ROLE_ARN`: IAM Role ARN (e.g. `arn:aws:iam::ACCOUNT_ID:role/GitHubActionsPortfolioDeployRole`)
 - `AWS_REGION`: AWS Region (e.g. `us-east-1`)
-- `S3_BUCKET_NAME`: Name of the S3 origin bucket (from CDK output)
-- `CLOUDFRONT_DISTRIBUTION_ID`: CloudFront distribution ID (from CDK output)
 
-### Step 5: Automatic Deployment
+Optional (for custom domain deployment):
+- `DOMAIN_NAME`: `aditya.weinventify.com`
+- `CERTIFICATE_ARN`: `arn:aws:acm:us-east-1:...:certificate/...`
+- `HOSTED_ZONE_ID`: `Z...`
 
-Every time code is pushed or merged to `main`, `.github/workflows/deploy.yml` automatically:
+### Step 5: Automatic Deployment via AWS CDK
+
+Every time code is pushed or merged to `main` (or triggered manually via `workflow_dispatch`), `.github/workflows/deploy.yml` automatically:
 1. Installs dependencies and compiles the Angular production bundle in `frontend/`.
-2. Authenticates keylessly to AWS using OIDC.
-3. Synchronizes static assets to S3 with `--delete`.
-4. Invalidates the CloudFront cache (`/*`) so new updates are served immediately globally.
+2. Installs CDK dependencies and builds TypeScript in `iac/`.
+3. Authenticates keylessly to AWS using OIDC.
+4. Executes `npx cdk deploy --require-approval never`, which manages the S3 bucket, CloudFront distribution with OAC, synchronizes the frontend assets, and invalidates the CloudFront cache globally.

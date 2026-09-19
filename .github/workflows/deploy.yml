@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 # Permissions required to request JWT/OIDC token from GitHub OIDC provider
 permissions:
@@ -22,7 +23,9 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            iac/package-lock.json
 
       - name: Install Frontend Dependencies
         run: |
@@ -36,16 +39,23 @@ jobs:
           cd frontend
           npm run build
 
+      - name: Install IaC Dependencies
+        run: |
+          cd iac
+          npm ci
+          npm run build
+
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Deploy to S3
+      - name: Deploy Infrastructure & Assets via CDK
+        env:
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN }}
+          HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
         run: |
-          aws s3 sync frontend/dist/portfolio-app/browser s3://${{ secrets.S3_BUCKET_NAME }} --delete
-
-      - name: Invalidate CloudFront Cache
-        run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+          cd iac
+          npx cdk deploy --require-approval never
