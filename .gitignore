@@ -14,7 +14,9 @@ docker-compose.yml
 *.env.*
 !.env.example
 
-# Build & CDK output
+# Build, CDK & SAM output
 dist/
 cdk.out/
+.aws-sam/
+
 

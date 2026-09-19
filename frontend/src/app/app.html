@@ -1059,6 +1059,11 @@
             <p>Thank you for reaching out. I'll get back to you as soon as possible.</p>
           </div>
         } @else {
+          @if (formStatus() === 'error') {
+            <div class="form-error-alert" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
+              <p style="margin: 0;">{{ formErrorMessage() || 'Failed to deliver message. Please try again or email ka09934147002@gmail.com directly.' }}</p>
+            </div>
+          }
           <form (submit)="onSubmit($event)" class="contact-form">
             <!-- Name -->
             <div class="form-group">

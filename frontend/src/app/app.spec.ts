@@ -36,4 +36,34 @@ describe('App', () => {
     app['closeMobileMenu']();
     expect(app['mobileMenuOpen']()).toBeFalsy();
   });
+
+  it('should flag errors when submitting empty contact form', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+
+    const mockEvent = new Event('submit');
+    app['onSubmit'](mockEvent);
+
+    expect(app['formErrors'].name()).toBe(true);
+    expect(app['formErrors'].email()).toBe(true);
+    expect(app['formErrors'].message()).toBe(true);
+    expect(app['formStatus']()).toBe('idle');
+  });
+
+  it('should pass validation with valid contact inputs', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+
+    app['contactForm'].name.set('Jane Doe');
+    app['contactForm'].email.set('jane@example.com');
+    app['contactForm'].message.set('Excited to collaborate!');
+
+    const mockEvent = new Event('submit');
+    app['onSubmit'](mockEvent);
+
+    expect(app['formErrors'].name()).toBe(false);
+    expect(app['formErrors'].email()).toBe(false);
+    expect(app['formErrors'].message()).toBe(false);
+    expect(app['formStatus']()).toBe('sending');
+  });
 });

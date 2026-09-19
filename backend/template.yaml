@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS Serverless Application Model (SAM) for Kumar Aditya Portfolio Contact Form API.
+  Exposes Lambda via API Gateway and dispatches notification emails via Amazon SES.
+
+Parameters:
+  RecipientEmail:
+    Type: String
+    Default: ka09934147002@gmail.com
+    Description: Destination email address where contact messages are delivered.
+  SenderEmail:
+    Type: String
+    Default: ka09934147002@gmail.com
+    Description: Verified SES sender email address.
+  StageName:
+    Type: String
+    Default: prod
+    Description: API Gateway stage name.
+
+Globals:
+  Function:
+    Timeout: 15
+    MemorySize: 256
+    Runtime: nodejs22.x
+    Architectures:
+      - arm64
+    Environment:
+      Variables:
+        RECIPIENT_EMAIL: !Ref RecipientEmail
+        SENDER_EMAIL: !Ref SenderEmail
+  Api:
+    Cors:
+      AllowMethods: "'POST,OPTIONS'"
+      AllowHeaders: "'Content-Type,Authorization,X-Api-Key'"
+      AllowOrigin: "'*'"
+
+Resources:
+  ContactApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref StageName
+      OpenApiVersion: '3.0.1'
+
+  ContactFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: index.handler
+      Description: Validates contact form submissions and delivers emails via Amazon SES.
+      Policies:
+        - Statement:
+            - Sid: SESSendEmailAccess
+              Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: '*'
+      Events:
+        ContactPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ContactApi
+            Path: /contact
+            Method: post
+        ContactOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ContactApi
+            Path: /contact
+            Method: options
+
+Outputs:
+  ContactApiEndpoint:
+    Description: Public API Gateway endpoint URL for the contact form
+    Value: !Sub "https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/contact"
+  ContactFunctionArn:
+    Description: Lambda Function ARN
+    Value: !GetAtt ContactFunction.Arn
+  ContactFunctionIamRole:
+    Description: Implicit IAM Role created for the Contact function
+    Value: !GetAtt ContactFunctionRole.Arn
