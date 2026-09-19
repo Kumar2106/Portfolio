@@ -38,9 +38,27 @@ Portfolio/
 
 ---
 
-## Part 1: Deploy Infrastructure with AWS CDK (`iac/`)
+## Part 1: Build the Frontend Application (`frontend/`)
 
-The recommended method to provision and manage AWS resources is through the AWS CDK package in `iac/`.
+Before deploying infrastructure or triggering CI/CD, compile the Angular application:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+Compiled production assets will be output to:
+`frontend/dist/portfolio-app/browser/`
+
+> [!IMPORTANT]
+> The CDK stack automatically detects the `frontend/dist/portfolio-app/browser/` folder and deploys it via `BucketDeployment`. Compiling the frontend first ensures your assets are synced and your CloudFront distribution is immediately functional.
+
+---
+
+## Part 2: Deploy Infrastructure with AWS CDK (`iac/`)
+
+The recommended method to provision and manage AWS resources is through the AWS CDK package in `iac/`:
 
 ### 1. Install CDK Dependencies
 ```bash
@@ -56,7 +74,7 @@ npm run synth
 
 ### 3. Deploy Stack to AWS
 ```bash
-# Standard deployment (provisions S3 bucket + CloudFront distribution)
+# Standard deployment (provisions S3 bucket + CloudFront distribution and syncs assets)
 npm run deploy
 
 # Custom domain deployment with Route 53 and ACM certificate
@@ -70,18 +88,6 @@ Once deployment completes, the CDK outputs the:
 - `DistributionId`: The CloudFront distribution ID.
 - `DistributionDomainName`: The CloudFront distribution URL (e.g. `d123456abcdef8.cloudfront.net`).
 - `SiteUrl`: The live website URL.
-
----
-
-## Part 2: Build the Frontend Application (`frontend/`)
-
-Before uploading assets or triggering CI/CD, verify the Angular bundle compiles:
-
-```bash
-cd frontend
-npm install
-npm run build
-```
 
 Compiled production assets will be output to:
 `frontend/dist/portfolio-app/browser/`

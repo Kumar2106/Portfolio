@@ -38,6 +38,13 @@ export class PortfolioStack extends cdk.Stack {
     });
 
     // 2. Custom Domain & Certificate Setup (Optional)
+    if (Boolean(props?.domainName) !== Boolean(props?.certificateArn)) {
+      throw new Error('domainName and certificateArn must be set together');
+    }
+    if (props?.hostedZoneId && !props?.domainName) {
+      throw new Error('hostedZoneId requires domainName and certificateArn');
+    }
+
     let certificate: acm.ICertificate | undefined;
     let domainNames: string[] | undefined;
 
