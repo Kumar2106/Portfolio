@@ -107,14 +107,17 @@ npm run synth
 # Preview infrastructure changes
 npm run diff
 
-# Deploy stack to AWS
+# Deploy stack to AWS (ensure frontend is built first: cd ../frontend && npm run build)
 npm run deploy
 
-# Deploy with custom domain and certificate
+# Or deploy with custom domain and certificate
 npx cdk deploy -c domainName="aditya.weinventify.com" \
                -c certificateArn="arn:aws:acm:us-east-1:123456789012:certificate/..." \
                -c hostedZoneId="Z1234567890ABC"
 ```
+
+> [!TIP]
+> Use `./deploy-aws.sh` from the repository root to automatically build the frontend and deploy the CDK stack in a single step.
 
 For more details, see the [IaC Documentation](iac/README.md).
 

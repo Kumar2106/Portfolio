@@ -52,25 +52,31 @@ npm run diff
 ### Deploy to AWS
 
 > [!IMPORTANT]
-> Always compile the Angular production bundle **before** deploying the CDK stack so that `PortfolioStack`'s `BucketDeployment` detects and deploys the static assets:
-> ```bash
-> # 1. Build frontend assets first
-> cd ../frontend && npm install && npm run build && cd ../iac
-> 
-> # 2. Deploy infrastructure & sync assets
-> npm run deploy
-> ```
-> Alternatively, execute the root automated deployment script which builds the frontend and deploys the CDK stack in a single step:
-> ```bash
-> ./deploy-aws.sh
-> ```
+> The CDK stack deploys static assets via `BucketDeployment` only when `frontend/dist/portfolio-app/browser` exists. Always build the frontend application **before** deploying the stack on a clean checkout.
 
+#### Recommended: One-Command Automated Deployment
+Use the root deployment script which compiles the frontend and deploys the CDK infrastructure sequentially:
 ```bash
-# Deployment with custom domain and ACM certificate
-npx cdk deploy -c domainName="aditya.weinventify.com" \
-               -c certificateArn="arn:aws:acm:us-east-1:123456789012:certificate/..." \
-               -c hostedZoneId="Z1234567890ABC"
+./deploy-aws.sh
 ```
+
+#### Manual Deployment
+
+1. **Build frontend assets**:
+   ```bash
+   cd ../frontend && npm install && npm run build && cd ../iac
+   ```
+
+2. **Deploy infrastructure via CDK**:
+   ```bash
+   # Standard deployment (CloudFront generated domain)
+   npm run deploy
+
+   # Custom domain deployment with Route 53 and ACM certificate
+   npx cdk deploy -c domainName="aditya.weinventify.com" \
+                  -c certificateArn="arn:aws:acm:us-east-1:123456789012:certificate/..." \
+                  -c hostedZoneId="Z1234567890ABC"
+   ```
 
 ### Destroy Infrastructure
 ```bash
