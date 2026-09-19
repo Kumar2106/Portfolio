@@ -111,22 +111,31 @@ If you have the AWS CLI configured locally (`aws configure`), you can build the 
 
 Deployments are automated through **GitHub Actions** using **AWS OpenID Connect (OIDC)** authentication (zero long-lived credentials stored in GitHub).
 
-### Step 1: Create IAM OIDC Identity Provider in AWS
+### Step 1: Provision OIDC Provider & Role via AWS CDK (Recommended)
 
-1. Open the **AWS IAM Console** -> **Identity Providers** -> click **Add provider**.
-2. Select **OpenID Connect**.
-3. Settings:
-   - **Provider URL**: `https://token.actions.githubusercontent.com` (click **Get thumbprint**).
-   - **Audience**: `sts.amazonaws.com`.
-4. Click **Add provider**.
+You can provision the entire GitHub OIDC Identity Provider and the IAM Deployment Role in a single command using `PortfolioOidcStack`:
 
-### Step 2: Create IAM Role with OIDC Trust Policy
+```bash
+cd iac
+npx cdk deploy PortfolioOidcStack
 
-1. Go to **IAM** -> **Roles** -> click **Create role**.
-2. Select **Custom trust policy** and paste the following:
+# If the GitHub OIDC provider already exists in your account:
+npx cdk deploy PortfolioOidcStack -c existingOidcProvider=true
+```
 
-   > [!IMPORTANT]
-   > Replace `ACCOUNT_ID` with your 12-digit AWS Account ID:
+This will output the `RoleArn` (e.g. `arn:aws:iam::ACCOUNT_ID:role/GitHubActionsPortfolioDeployRole`), which you copy directly to your GitHub repository secrets.
+
+---
+
+### Step 2: (Alternative) Manual AWS Console Setup
+
+If you prefer setting up OIDC manually in the AWS Console:
+
+1. **Create Identity Provider**:
+   - Open **AWS IAM Console** -> **Identity Providers** -> **Add provider**.
+   - Provider URL: `https://token.actions.githubusercontent.com`. Audience: `sts.amazonaws.com`.
+2. **Create IAM Role**:
+   - Create a role with the following trust policy (replace `ACCOUNT_ID`):
 
    ```json
    {
@@ -143,7 +152,7 @@ Deployments are automated through **GitHub Actions** using **AWS OpenID Connect 
              "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
            },
            "StringLike": {
-             "token.actions.githubusercontent.com:sub": "repo:Kumar2106/Portfolio:ref:refs/heads/main"
+             "token.actions.githubusercontent.com:sub": "repo:Kumar2106/Portfolio:*"
            }
          }
        }

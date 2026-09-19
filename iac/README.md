@@ -23,6 +23,9 @@ The infrastructure provisions a production-grade, highly available, and secure s
 4. **Custom Domain & SSL (Optional)**:
    - Route 53 A and AAAA alias records.
    - AWS Certificate Manager (ACM) SSL/TLS certificate in `us-east-1`.
+5. **GitHub Actions OIDC Authentication (`PortfolioOidcStack`)**:
+   - Provisions the OpenID Connect (OIDC) Identity Provider for `token.actions.githubusercontent.com`.
+   - Creates the `GitHubActionsPortfolioDeployRole` assumed keylessly by GitHub Actions with least-privilege permissions to deploy CDK stacks and sync frontend assets.
 
 ---
 
@@ -44,12 +47,19 @@ npm run build
 npm run synth
 ```
 
-### Preview Changes (Diff)
+### 1. Provision GitHub Actions OIDC Role (One-Time Setup)
 ```bash
-npm run diff
-```
+# Deploys OIDC provider and GitHubActionsPortfolioDeployRole
+npx cdk deploy PortfolioOidcStack
 
-### Deploy to AWS
+# If the GitHub OIDC provider already exists in your AWS account:
+npx cdk deploy PortfolioOidcStack -c existingOidcProvider=true
+```
+Copy the output `RoleArn` into your GitHub repository secret: `AWS_ROLE_ARN`.
+
+---
+
+### 2. Deploy Portfolio Hosting Infrastructure
 
 > [!IMPORTANT]
 > The CDK stack deploys static assets via `BucketDeployment` only when `frontend/dist/portfolio-app/browser` exists. Always build the frontend application **before** deploying the stack on a clean checkout.
@@ -70,15 +80,15 @@ Use the root deployment script which compiles the frontend and deploys the CDK i
 2. **Deploy infrastructure via CDK**:
    ```bash
    # Standard deployment (CloudFront generated domain)
-   npm run deploy
+   npx cdk deploy PortfolioStack
 
    # Custom domain deployment with Route 53 and ACM certificate
-   npx cdk deploy -c domainName="aditya.weinventify.com" \
-                  -c certificateArn="arn:aws:acm:us-east-1:123456789012:certificate/..." \
-                  -c hostedZoneId="Z1234567890ABC"
+   npx cdk deploy PortfolioStack -c domainName="aditya.weinventify.com" \
+                                 -c certificateArn="arn:aws:acm:us-east-1:123456789012:certificate/..." \
+                                 -c hostedZoneId="Z1234567890ABC"
    ```
 
 ### Destroy Infrastructure
 ```bash
-npx cdk destroy
+npx cdk destroy --all
 ```
