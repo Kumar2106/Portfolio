@@ -20,4 +20,20 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain('Kumar Aditya');
   });
+
+  it('should toggle mobile menu open/closed', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    
+    // Default state
+    expect(app['mobileMenuOpen']()).toBeFalsy();
+    
+    // Toggle menu
+    app['toggleMobileMenu']();
+    expect(app['mobileMenuOpen']()).toBeTruthy();
+    
+    // Close menu
+    app['closeMobileMenu']();
+    expect(app['mobileMenuOpen']()).toBeFalsy();
+  });
 });
