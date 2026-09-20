@@ -31,5 +31,6 @@ jobs:
           CONFIG.model: "gemini/gemini-2.0-flash"
           CONFIG.fallback_models: '["gemini/gemini-1.5-flash"]'
 
-          # Automated actions executed on PR events
-          GITHUB_ACTION.PR_ACTIONS: '["/review"]'
+          # Automatically run review on PR events
+          GITHUB_ACTION.AUTO_REVIEW: "true"
+          GITHUB_ACTION.PR_ACTIONS: '["opened", "reopened", "ready_for_review", "synchronize"]'
