@@ -28,8 +28,8 @@ jobs:
           GOOGLE_AI_STUDIO_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
           # LiteLLM routing to Google Gemini free tier
-          CONFIG.model: "gemini/gemini-2.0-flash"
-          CONFIG.fallback_models: '["gemini/gemini-1.5-flash"]'
+          CONFIG.model: "gemini/gemini-3.6-flash"
+          CONFIG.fallback_models: '["gemini/gemini-3.5-flash"]'
 
           # Automated actions executed on PR events
           GITHUB_ACTION.PR_ACTIONS: '["/review"]'
