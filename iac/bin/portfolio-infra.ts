@@ -17,12 +17,15 @@ const env = {
   region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
 };
 
+const existingOidcProviderContext = app.node.tryGetContext('existingOidcProvider');
+
 // 1. OIDC Stack: Provisions GitHub Actions Identity Provider and Deployer Role
 new PortfolioOidcStack(app, 'PortfolioOidcStack', {
   githubRepo:
     app.node.tryGetContext('githubRepo') || process.env.GITHUB_REPOSITORY || 'Kumar2106/Portfolio',
   existingOidcProvider:
-    app.node.tryGetContext('existingOidcProvider') === 'true' ||
+    existingOidcProviderContext === true ||
+    existingOidcProviderContext === 'true' ||
     process.env.EXISTING_OIDC_PROVIDER === 'true',
   env,
   description: 'GitHub Actions OIDC Provider and IAM Role for automated portfolio deployment',

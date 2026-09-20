@@ -25,7 +25,7 @@ The infrastructure provisions a production-grade, highly available, and secure s
    - AWS Certificate Manager (ACM) SSL/TLS certificate in `us-east-1`.
 5. **GitHub Actions OIDC Authentication (`PortfolioOidcStack`)**:
    - Provisions the OpenID Connect (OIDC) Identity Provider for `token.actions.githubusercontent.com`.
-   - Creates the `GitHubActionsPortfolioDeployRole` assumed keylessly by GitHub Actions with least-privilege permissions to deploy CDK stacks and sync frontend assets.
+   - Creates the `GitHubActionsPortfolioDeployRole` assumed keylessly by GitHub Actions with least-privilege permissions scoped to the main branch, portfolio deployment stacks, CDK bootstrap roles, and portfolio S3/CloudFront resources.
 
 ---
 
@@ -89,6 +89,10 @@ Use the root deployment script which compiles the frontend and deploys the CDK i
    ```
 
 ### Destroy Infrastructure
+To tear down the portfolio hosting infrastructure without removing CI/CD authentication:
 ```bash
-npx cdk destroy --all
+npx cdk destroy PortfolioStack
 ```
+
+> [!WARNING]
+> Running `npx cdk destroy --all` will also tear down `PortfolioOidcStack`, destroying the GitHub Actions deploy role and OIDC provider. Only use `--all` if you intend to completely dismantle all infrastructure including CI/CD access.

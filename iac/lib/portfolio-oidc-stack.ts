@@ -49,15 +49,28 @@ export class PortfolioOidcStack extends cdk.Stack {
     }
 
     // 2. OIDC Federated Principal with repository & branch claim conditions
-    const oidcPrincipal = new iam.OpenIdConnectPrincipal(this.oidcProvider, {
-      StringEquals: {
-        'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-      },
-      StringLike: {
-        // Allows both push to main and PR workflows from this repository
-        'token.actions.githubusercontent.com:sub': `repo:${githubRepo}:*`,
-      },
-    });
+    const isWildcardBranch = branchFilter.includes('*');
+    const subVal = `repo:${githubRepo}:${branchFilter.startsWith('refs/') ? `ref:${branchFilter}` : branchFilter}`;
+
+    const stringEqualsConditions: Record<string, string> = {
+      'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+    };
+    const stringLikeConditions: Record<string, string> = {};
+
+    if (isWildcardBranch) {
+      stringLikeConditions['token.actions.githubusercontent.com:sub'] = subVal;
+    } else {
+      stringEqualsConditions['token.actions.githubusercontent.com:sub'] = subVal;
+    }
+
+    const conditions: Record<string, Record<string, string>> = {
+      StringEquals: stringEqualsConditions,
+    };
+    if (Object.keys(stringLikeConditions).length > 0) {
+      conditions.StringLike = stringLikeConditions;
+    }
+
+    const oidcPrincipal = new iam.OpenIdConnectPrincipal(this.oidcProvider, conditions);
 
     // 3. IAM Role for GitHub Actions CI/CD Deployment
     this.deployRole = new iam.Role(this, 'GitHubActionsDeployRole', {
@@ -111,7 +124,7 @@ export class PortfolioOidcStack extends cdk.Stack {
 
     this.deployRole.addToPolicy(
       new iam.PolicyStatement({
-        sid: 'S3AssetSyncAndInvalidation',
+        sid: 'S3AssetDeployment',
         effect: iam.Effect.ALLOW,
         actions: [
           's3:PutObject',
@@ -119,10 +132,27 @@ export class PortfolioOidcStack extends cdk.Stack {
           's3:ListBucket',
           's3:DeleteObject',
           's3:GetBucketLocation',
+        ],
+        resources: [
+          `arn:aws:s3:::cdk-*-assets-${this.account}-*`,
+          `arn:aws:s3:::cdk-*-assets-${this.account}-*/*`,
+          `arn:aws:s3:::*portfolio*`,
+          `arn:aws:s3:::*portfolio*/*`,
+        ],
+      })
+    );
+
+    this.deployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'CloudFrontInvalidation',
+        effect: iam.Effect.ALLOW,
+        actions: [
           'cloudfront:CreateInvalidation',
           'cloudfront:GetInvalidation',
         ],
-        resources: ['*'],
+        resources: [
+          `arn:aws:cloudfront::${this.account}:distribution/*`,
+        ],
       })
     );
 

@@ -149,10 +149,8 @@ If you prefer setting up OIDC manually in the AWS Console:
          "Action": "sts:AssumeRoleWithWebIdentity",
          "Condition": {
            "StringEquals": {
-             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-           },
-           "StringLike": {
-             "token.actions.githubusercontent.com:sub": "repo:Kumar2106/Portfolio:*"
+             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+             "token.actions.githubusercontent.com:sub": "repo:Kumar2106/Portfolio:ref:refs/heads/main"
            }
          }
        }
@@ -162,32 +160,67 @@ If you prefer setting up OIDC manually in the AWS Console:
 
 ### Step 3: Attach IAM Permissions Policy
 
-Attach a least-privilege policy allowing S3 synchronization and CloudFront cache invalidation:
+Attach a policy allowing CDK deployment (bootstrap role assumption, SSM lookups, CloudFormation status) alongside S3 asset synchronization and CloudFront cache invalidation:
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "CDKBootstrapRoleAssumption",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/cdk-*-deploy-role-ACCOUNT_ID-*",
+        "arn:aws:iam::ACCOUNT_ID:role/cdk-*-file-publishing-role-ACCOUNT_ID-*",
+        "arn:aws:iam::ACCOUNT_ID:role/cdk-*-lookup-role-ACCOUNT_ID-*"
+      ]
+    },
+    {
+      "Sid": "SSMBootstrapLookup",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters"
+      ],
+      "Resource": "arn:aws:ssm:*:ACCOUNT_ID:parameter/cdk-bootstrap/*"
+    },
+    {
+      "Sid": "CloudFormationDeployStatus",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:DescribeStacks",
+        "cloudformation:GetTemplate",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:DescribeStackResources"
+      ],
+      "Resource": "arn:aws:cloudformation:*:ACCOUNT_ID:stack/Portfolio*/*"
+    },
+    {
+      "Sid": "S3AssetDeployment",
       "Effect": "Allow",
       "Action": [
         "s3:PutObject",
         "s3:GetObject",
         "s3:ListBucket",
-        "s3:DeleteObject"
+        "s3:DeleteObject",
+        "s3:GetBucketLocation"
       ],
       "Resource": [
-        "arn:aws:s3:::YOUR_S3_BUCKET_NAME",
-        "arn:aws:s3:::YOUR_S3_BUCKET_NAME/*"
+        "arn:aws:s3:::cdk-*-assets-ACCOUNT_ID-*",
+        "arn:aws:s3:::cdk-*-assets-ACCOUNT_ID-*/*",
+        "arn:aws:s3:::*portfolio*",
+        "arn:aws:s3:::*portfolio*/*"
       ]
     },
     {
+      "Sid": "CloudFrontInvalidation",
       "Effect": "Allow",
       "Action": [
         "cloudfront:CreateInvalidation",
         "cloudfront:GetInvalidation"
       ],
-      "Resource": "arn:aws:cloudfront::ACCOUNT_ID:distribution/YOUR_CLOUDFRONT_DISTRIBUTION_ID"
+      "Resource": "arn:aws:cloudfront::ACCOUNT_ID:distribution/*"
     }
   ]
 }
