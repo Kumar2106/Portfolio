@@ -73,6 +73,8 @@ export class App implements OnDestroy {
 
   // Form submission status
   protected readonly formStatus = signal<'idle' | 'sending' | 'success' | 'error'>('idle');
+  protected readonly formErrorMessage = signal<string>('');
+  private readonly contactApiUrl = (typeof window !== 'undefined' && (window as any)?.__ENV?.CONTACT_API_URL) || '';
   protected readonly formErrors = {
     name: signal(false),
     email: signal(false),
@@ -297,11 +299,12 @@ export class App implements OnDestroy {
   }
 
   // --- Contact Form Actions ---
-  protected onSubmit(event: Event): void {
+  protected async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
     
     // Reset status & errors
     this.formStatus.set('idle');
+    this.formErrorMessage.set('');
     this.formErrors.name.set(false);
     this.formErrors.email.set(false);
     this.formErrors.message.set(false);
@@ -329,17 +332,47 @@ export class App implements OnDestroy {
       return;
     }
 
-    // Trigger sending simulation
     this.formStatus.set('sending');
 
-    setTimeout(() => {
-      // Success simulation
-      this.formStatus.set('success');
-      
-      // Reset inputs
-      this.contactForm.name.set('');
-      this.contactForm.email.set('');
-      this.contactForm.message.set('');
-    }, 1500);
+    const payload = {
+      name: this.contactForm.name().trim(),
+      email: this.contactForm.email().trim(),
+      message: this.contactForm.message().trim(),
+    };
+
+    // If Contact API URL is configured (API Gateway), send to Lambda
+    if (this.contactApiUrl) {
+      try {
+        const response = await fetch(this.contactApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          this.formStatus.set('success');
+          this.contactForm.name.set('');
+          this.contactForm.email.set('');
+          this.contactForm.message.set('');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          this.formErrorMessage.set(data?.error || 'Failed to deliver message. Please try again.');
+          this.formStatus.set('error');
+        }
+      } catch {
+        this.formErrorMessage.set('Network error. Please try again or email ka09934147002@gmail.com directly.');
+        this.formStatus.set('error');
+      }
+    } else {
+      // Local development simulation fallback
+      setTimeout(() => {
+        this.formStatus.set('success');
+        this.contactForm.name.set('');
+        this.contactForm.email.set('');
+        this.contactForm.message.set('');
+      }, 1000);
+    }
   }
 }

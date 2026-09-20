@@ -9,7 +9,7 @@ A modern, cloud-native developer portfolio application built with **Angular (Sig
 
 ## 📁 Repository Structure
 
-The repository is modularized into two distinct packages:
+The repository is modularized into three distinct packages:
 
 ```
 Portfolio/
@@ -18,6 +18,12 @@ Portfolio/
 │   ├── public/             # Static assets (favicons, etc.)
 │   ├── angular.json        # Angular workspace configuration
 │   └── package.json        # Frontend dependencies & scripts
+├── backend/                # Serverless Contact Service (AWS SAM)
+│   ├── src/                # Lambda handler (TypeScript, SES client)
+│   ├── test/               # Vitest unit tests
+│   ├── template.yaml       # AWS SAM template (Lambda, API Gateway, SES policy)
+│   ├── samconfig.toml      # SAM CLI deployment & local runtime settings
+│   └── package.json        # Backend dependencies & scripts
 ├── iac/                    # AWS Cloud Development Kit (CDK v2) Package
 │   ├── bin/                # CDK application entry point
 │   ├── lib/                # Infrastructure stack (S3, CloudFront OAC, Route53, SPA routing)
@@ -50,8 +56,9 @@ Portfolio/
 ## 🛠️ Tech Stack
 
 * **Frontend:** Angular 22, TypeScript, Reactive Signals, CSS3 Custom Properties
+* **Backend:** AWS SAM (Serverless Application Model), AWS Lambda (Node.js 22 / ARM64), Amazon API Gateway, Amazon SES
 * **Infrastructure as Code (IaC):** AWS CDK v2 (TypeScript), CloudFormation
-* **AWS Services:** Amazon S3 (Private), CloudFront CDN (Origin Access Control), Route 53, ACM (SSL/TLS)
+* **AWS Services:** Amazon S3 (Private), CloudFront CDN (Origin Access Control), Route 53, ACM (SSL/TLS), Lambda, API Gateway, SES
 * **Testing:** Vitest, Angular TestBed
 * **CI/CD & Automation:** GitHub Actions (OIDC keyless authentication), CodeRabbit AI PR Reviews
 
@@ -120,6 +127,36 @@ npx cdk deploy -c domainName="aditya.weinventify.com" \
 > Use `./deploy-aws.sh` from the repository root to automatically build the frontend and deploy the CDK stack in a single step.
 
 For more details, see the [IaC Documentation](iac/README.md).
+
+---
+
+### 3. Backend Contact Service (`backend/`)
+
+A serverless backend built with **AWS SAM**, exposing an API Gateway endpoint (`POST /contact`) backed by an AWS Lambda function that validates incoming submissions and delivers email notifications via Amazon SES.
+
+```bash
+cd backend
+
+# Install dependencies
+npm install
+
+# Run unit tests
+npm test
+
+# Build TypeScript to dist/
+npm run build
+
+# Start local API Gateway simulation (http://localhost:3001)
+npm run local:api
+
+# Build SAM application
+sam build
+
+# Deploy to AWS (guided or configured)
+sam deploy --guided
+```
+
+For more details, see the [Backend Documentation](backend/README.md).
 
 ---
 
