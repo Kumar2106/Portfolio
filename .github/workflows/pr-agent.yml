@@ -1,0 +1,35 @@
+name: AI PR Review (Gemini)
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  issue_comment:
+    types: [created]
+
+jobs:
+  pr_agent:
+    # Avoid running on bot comments to prevent loops; for comments, only run if it contains a slash command
+    if: ${{ github.event.sender.type != 'Bot' && (github.event_name == 'pull_request' || contains(github.event.comment.body, '/')) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Run PR Agent
+        uses: the-pr-agent/pr-agent@main
+        env:
+          # GitHub Token provided automatically by Actions for commenting
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # Google Gemini Authentication (stored in repository secrets)
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_AI_STUDIO_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+          # LiteLLM routing to Google Gemini free tier
+          CONFIG.model: "gemini/gemini-2.0-flash"
+          CONFIG.fallback_models: '["gemini/gemini-1.5-flash"]'
+
+          # Automated actions executed on PR events
+          GITHUB_ACTION.PR_ACTIONS: '["/review"]'

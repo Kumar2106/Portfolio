@@ -1,0 +1,35 @@
+[config]
+model = "gemini/gemini-2.0-flash"
+fallback_models = ["gemini/gemini-1.5-flash"]
+git_provider = "github"
+
+[pr_reviewer]
+# Review output settings
+require_score_review = false
+require_tests_review = true
+require_estimate_effort_to_review = false
+inline_code_comments = true
+num_code_suggestions = 4
+
+extra_instructions = """
+Review with high standards for this full-stack portfolio codebase:
+1. Frontend (Angular 22):
+   - Verify usage of reactive Angular Signals, standalone components, and clean UI logic.
+   - Check mobile responsive styling and light/dark theme CSS variables.
+2. Infrastructure as Code (AWS CDK v2):
+   - Ensure least-privilege IAM policies, S3 private access blocks, and CloudFront OAC.
+   - Verify SPA rewrite rules (403/404 -> /index.html) and certificate/domain validation.
+3. Serverless Backend (AWS SAM):
+   - Check TypeScript Lambda handlers for input validation, schema bounds, and CORS handling.
+   - Verify IAM policies (e.g. SES permissions) are scoped to exact resources.
+4. CI/CD:
+   - Ensure GitHub Actions use keyless OIDC authentication and zero exposed credentials.
+Focus on high-value security, correctness, and architecture feedback. Keep comments concise with actionable code snippets.
+"""
+
+[pr_code_suggestions]
+max_number_of_code_suggestions = 4
+
+[pr_description]
+publish_labels = true
+add_custom_labels = true
