@@ -147,7 +147,7 @@ export class PortfolioOidcStack extends cdk.Stack {
           's3:GetBucketLocation',
           's3:CreateBucket',
           's3:PutBucketVersioning',
-          's3:PutBucketEncryption',
+          's3:PutEncryptionConfiguration',
           's3:PutBucketPolicy',
           's3:PutBucketPublicAccessBlock',
         ],
@@ -243,8 +243,6 @@ export class PortfolioOidcStack extends cdk.Stack {
           'iam:PassRole',
           'iam:PutRolePolicy',
           'iam:DeleteRolePolicy',
-          'iam:AttachRolePolicy',
-          'iam:DetachRolePolicy',
           'iam:TagRole',
           'iam:UntagRole',
           'iam:ListRolePolicies',
@@ -254,6 +252,28 @@ export class PortfolioOidcStack extends cdk.Stack {
           `arn:aws:iam::${this.account}:role/portfolio-*`,
           `arn:aws:iam::${this.account}:role/Portfolio*`,
         ],
+      })
+    );
+
+    this.deployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'IAMAttachRolePolicySAMDeployment',
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'iam:AttachRolePolicy',
+          'iam:DetachRolePolicy',
+        ],
+        resources: [
+          `arn:aws:iam::${this.account}:role/portfolio-*`,
+          `arn:aws:iam::${this.account}:role/Portfolio*`,
+        ],
+        conditions: {
+          ArnEquals: {
+            'iam:PolicyARN': [
+              'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+            ],
+          },
+        },
       })
     );
 
