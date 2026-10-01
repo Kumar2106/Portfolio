@@ -129,6 +129,7 @@ export class PortfolioOidcStack extends cdk.Stack {
         resources: [
           `arn:aws:cloudformation:*:${this.account}:stack/Portfolio*/*`,
           `arn:aws:cloudformation:*:${this.account}:stack/portfolio-*/*`,
+          `arn:aws:cloudformation:*:${this.account}:stack/aws-sam-cli-managed-default/*`,
           `arn:aws:cloudformation:*:${this.account}:changeSet/*/*`,
         ],
       })

@@ -19,6 +19,11 @@ on:
         description: 'Deployment Stage (prod, staging, dev)'
         required: true
         default: 'prod'
+        type: choice
+        options:
+          - prod
+          - staging
+          - dev
 
 # Permissions required to request JWT/OIDC token from GitHub OIDC provider
 permissions:
@@ -112,7 +117,21 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
       - name: Deploy SAM Application
+        env:
+          INPUT_STAGE: ${{ inputs.stage }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          RECIPIENT_EMAIL: ${{ secrets.CONTACT_RECIPIENT_EMAIL || 'ka09934147002@gmail.com' }}
+          SENDER_EMAIL: ${{ secrets.CONTACT_SENDER_EMAIL || 'ka09934147002@gmail.com' }}
         run: |
+          STAGE="${INPUT_STAGE:-prod}"
+          case "$STAGE" in
+            prod|staging|dev) ;;
+            *)
+              echo "Error: Invalid stage '$STAGE'. Supported stages are: prod, staging, dev" >&2
+              exit 1
+              ;;
+          esac
+
           cd backend
           sam deploy \
             --stack-name portfolio-contact-api \
@@ -120,17 +139,19 @@ jobs:
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
             --resolve-s3 \
-            --region "${{ secrets.AWS_REGION || 'us-east-1' }}" \
+            --region "$AWS_REGION" \
             --parameter-overrides \
-              RecipientEmail="${{ secrets.CONTACT_RECIPIENT_EMAIL || 'ka09934147002@gmail.com' }}" \
-              SenderEmail="${{ secrets.CONTACT_SENDER_EMAIL || 'ka09934147002@gmail.com' }}" \
-              StageName="${{ inputs.stage || 'prod' }}"
+              RecipientEmail="$RECIPIENT_EMAIL" \
+              SenderEmail="$SENDER_EMAIL" \
+              StageName="$STAGE"
 
       - name: Log Deployed API Endpoint
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
         run: |
           API_ENDPOINT=$(aws cloudformation describe-stacks \
             --stack-name portfolio-contact-api \
-            --region "${{ secrets.AWS_REGION || 'us-east-1' }}" \
+            --region "$AWS_REGION" \
             --query "Stacks[0].Outputs[?OutputKey=='ContactApiEndpoint'].OutputValue" \
             --output text)
           echo "::notice title=Contact API Endpoint::${API_ENDPOINT}"
