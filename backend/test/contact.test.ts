@@ -84,6 +84,16 @@ describe('Contact Form Lambda Handler', () => {
     expect(JSON.parse(response.body).error).toBe('Name is required');
   });
 
+  it('should return 400 when name is whitespace only', async () => {
+    const event = createMockEvent({
+      body: JSON.stringify({ name: '   ', email: 'alex@example.com', message: 'Hello!' }),
+    });
+    const response = await handler(event);
+
+    expect(response.statusCode).toBe(400);
+    expect(JSON.parse(response.body).error).toBe('Name is required');
+  });
+
   it('should return 400 when email is invalid', async () => {
     const event = createMockEvent({
       body: JSON.stringify({ name: 'Alex', email: 'not-an-email', message: 'Hello!' }),
