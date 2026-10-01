@@ -1,0 +1,137 @@
+name: Deploy Backend Contact API
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: 'Deployment Stage (prod, staging, dev)'
+        required: true
+        default: 'prod'
+
+# Permissions required to request JWT/OIDC token from GitHub OIDC provider
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  SAM_CLI_TELEMETRY: 0
+
+jobs:
+  test-and-lint:
+    name: Test & Validate Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Run Backend Unit Tests
+        run: |
+          cd backend
+          npm test
+
+      - name: Compile TypeScript
+        run: |
+          cd backend
+          npm run build
+
+      - name: Set up AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Validate SAM Template
+        run: |
+          cd backend
+          sam validate --lint
+
+      - name: Build SAM Application
+        run: |
+          cd backend
+          sam build
+
+  deploy:
+    name: Deploy to AWS
+    needs: test-and-lint
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Set up AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Install Dependencies & Compile TypeScript
+        run: |
+          cd backend
+          npm ci
+          npm run build
+
+      - name: Build SAM Application
+        run: |
+          cd backend
+          sam build
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      - name: Deploy SAM Application
+        run: |
+          cd backend
+          sam deploy \
+            --stack-name portfolio-contact-api \
+            --capabilities CAPABILITY_IAM \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --resolve-s3 \
+            --region "${{ secrets.AWS_REGION || 'us-east-1' }}" \
+            --parameter-overrides \
+              RecipientEmail="${{ secrets.CONTACT_RECIPIENT_EMAIL || 'ka09934147002@gmail.com' }}" \
+              SenderEmail="${{ secrets.CONTACT_SENDER_EMAIL || 'ka09934147002@gmail.com' }}" \
+              StageName="${{ inputs.stage || 'prod' }}"
+
+      - name: Log Deployed API Endpoint
+        run: |
+          API_ENDPOINT=$(aws cloudformation describe-stacks \
+            --stack-name portfolio-contact-api \
+            --region "${{ secrets.AWS_REGION || 'us-east-1' }}" \
+            --query "Stacks[0].Outputs[?OutputKey=='ContactApiEndpoint'].OutputValue" \
+            --output text)
+          echo "::notice title=Contact API Endpoint::${API_ENDPOINT}"
+          echo "Public Contact API Endpoint: ${API_ENDPOINT}"

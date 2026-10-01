@@ -75,7 +75,7 @@ export class PortfolioOidcStack extends cdk.Stack {
     // 3. IAM Role for GitHub Actions CI/CD Deployment
     this.deployRole = new iam.Role(this, 'GitHubActionsDeployRole', {
       roleName: 'GitHubActionsPortfolioDeployRole',
-      description: `Role assumed by GitHub Actions (${githubRepo}) for automated portfolio CDK deployments`,
+      description: `Role assumed by GitHub Actions (${githubRepo}) for automated portfolio CDK and SAM deployments`,
       assumedBy: oidcPrincipal,
       maxSessionDuration: cdk.Duration.hours(1),
     });
@@ -112,12 +112,24 @@ export class PortfolioOidcStack extends cdk.Stack {
         effect: iam.Effect.ALLOW,
         actions: [
           'cloudformation:DescribeStacks',
-          'cloudformation:GetTemplate',
           'cloudformation:DescribeStackEvents',
           'cloudformation:DescribeStackResources',
+          'cloudformation:DescribeStackResource',
+          'cloudformation:GetTemplate',
+          'cloudformation:GetTemplateSummary',
+          'cloudformation:ListStackResources',
+          'cloudformation:CreateStack',
+          'cloudformation:UpdateStack',
+          'cloudformation:DeleteStack',
+          'cloudformation:CreateChangeSet',
+          'cloudformation:ExecuteChangeSet',
+          'cloudformation:DescribeChangeSet',
+          'cloudformation:DeleteChangeSet',
         ],
         resources: [
           `arn:aws:cloudformation:*:${this.account}:stack/Portfolio*/*`,
+          `arn:aws:cloudformation:*:${this.account}:stack/portfolio-*/*`,
+          `arn:aws:cloudformation:*:${this.account}:changeSet/*/*`,
         ],
       })
     );
@@ -132,12 +144,19 @@ export class PortfolioOidcStack extends cdk.Stack {
           's3:ListBucket',
           's3:DeleteObject',
           's3:GetBucketLocation',
+          's3:CreateBucket',
+          's3:PutBucketVersioning',
+          's3:PutBucketEncryption',
+          's3:PutBucketPolicy',
+          's3:PutBucketPublicAccessBlock',
         ],
         resources: [
           `arn:aws:s3:::cdk-*-assets-${this.account}-*`,
           `arn:aws:s3:::cdk-*-assets-${this.account}-*/*`,
           `arn:aws:s3:::*portfolio*`,
           `arn:aws:s3:::*portfolio*/*`,
+          'arn:aws:s3:::aws-sam-cli-managed-*',
+          'arn:aws:s3:::aws-sam-cli-managed-*/*',
         ],
       })
     );
@@ -152,6 +171,71 @@ export class PortfolioOidcStack extends cdk.Stack {
         ],
         resources: [
           `arn:aws:cloudfront::${this.account}:distribution/*`,
+        ],
+      })
+    );
+
+    // 6. Backend SAM Deployment Permissions (Lambda, API Gateway, IAM)
+    this.deployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'LambdaSAMDeployment',
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'lambda:CreateFunction',
+          'lambda:UpdateFunctionCode',
+          'lambda:UpdateFunctionConfiguration',
+          'lambda:DeleteFunction',
+          'lambda:GetFunction',
+          'lambda:GetFunctionConfiguration',
+          'lambda:AddPermission',
+          'lambda:RemovePermission',
+          'lambda:TagResource',
+          'lambda:UntagResource',
+          'lambda:ListTags',
+          'lambda:PublishVersion',
+        ],
+        resources: [
+          `arn:aws:lambda:*:${this.account}:function:portfolio-*`,
+          `arn:aws:lambda:*:${this.account}:function:Portfolio*`,
+        ],
+      })
+    );
+
+    this.deployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'ApiGatewaySAMDeployment',
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'apigateway:*',
+        ],
+        resources: [
+          'arn:aws:apigateway:*::*',
+        ],
+      })
+    );
+
+    this.deployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'IAMRoleSAMDeployment',
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'iam:CreateRole',
+          'iam:DeleteRole',
+          'iam:GetRole',
+          'iam:GetRolePolicy',
+          'iam:PassRole',
+          'iam:PutRolePolicy',
+          'iam:DeleteRolePolicy',
+          'iam:AttachRolePolicy',
+          'iam:DetachRolePolicy',
+          'iam:TagRole',
+          'iam:UntagRole',
+          'iam:ListRolePolicies',
+          'iam:ListAttachedRolePolicies',
+        ],
+        resources: [
+          `arn:aws:iam::${this.account}:role/portfolio-*`,
+          `arn:aws:iam::${this.account}:role/Portfolio*`,
         ],
       })
     );
