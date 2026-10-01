@@ -204,13 +204,29 @@ export class PortfolioOidcStack extends cdk.Stack {
 
     this.deployRole.addToPolicy(
       new iam.PolicyStatement({
-        sid: 'ApiGatewaySAMDeployment',
+        sid: 'ApiGatewayCreateRestApi',
+        effect: iam.Effect.ALLOW,
+        actions: ['apigateway:POST'],
+        resources: [
+          `arn:aws:apigateway:${this.region}::/restapis`,
+        ],
+      })
+    );
+
+    this.deployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'ApiGatewayManageRestApi',
         effect: iam.Effect.ALLOW,
         actions: [
-          'apigateway:*',
+          'apigateway:GET',
+          'apigateway:POST',
+          'apigateway:PUT',
+          'apigateway:PATCH',
+          'apigateway:DELETE',
         ],
         resources: [
-          'arn:aws:apigateway:*::*',
+          `arn:aws:apigateway:${this.region}::/restapis/*`,
+          `arn:aws:apigateway:${this.region}::/tags/*`,
         ],
       })
     );
