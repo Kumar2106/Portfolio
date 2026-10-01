@@ -25,7 +25,9 @@ The infrastructure provisions a production-grade, highly available, and secure s
    - AWS Certificate Manager (ACM) SSL/TLS certificate in `us-east-1`.
 5. **GitHub Actions OIDC Authentication (`PortfolioOidcStack`)**:
    - Provisions the OpenID Connect (OIDC) Identity Provider for `token.actions.githubusercontent.com`.
-   - Creates the `GitHubActionsPortfolioDeployRole` assumed keylessly by GitHub Actions with least-privilege permissions scoped to the main branch, portfolio deployment stacks, CDK bootstrap roles, and portfolio S3/CloudFront resources.
+   - Creates two isolated, least-privilege IAM roles:
+     - `GitHubActionsPortfolioFrontendDeployRole`: Scoped to AWS CDK, S3 origin bucket, and CloudFront CDN.
+     - `GitHubActionsPortfolioBackendDeployRole`: Scoped to AWS SAM, CloudFormation, Lambda, and API Gateway.
 
 ---
 
@@ -33,7 +35,7 @@ The infrastructure provisions a production-grade, highly available, and secure s
 
 ### Prerequisites
 - Node.js `^20.0.0` or `^22.0.0`
-- AWS CLI configured with valid credentials (`aws sts get-caller-identity`)
+- AWS CLI configured with valid credentials (`aws sts get-caller-identity --profile personal`)
 - AWS CDK CLI: `npm install -g aws-cdk` (or use local `npx cdk`)
 
 ### Installation
@@ -47,15 +49,18 @@ npm run build
 npm run synth
 ```
 
-### 1. Provision GitHub Actions OIDC Role (One-Time Setup)
+### 1. Provision GitHub Actions OIDC Roles (One-Time Setup)
 ```bash
-# Deploys OIDC provider and GitHubActionsPortfolioDeployRole
-npx cdk deploy PortfolioOidcStack
+# Deploys OIDC provider and both frontend & backend IAM deploy roles using personal profile
+npx cdk deploy PortfolioOidcStack --profile personal
 
 # If the GitHub OIDC provider already exists in your AWS account:
-npx cdk deploy PortfolioOidcStack -c existingOidcProvider=true
+npx cdk deploy PortfolioOidcStack -c existingOidcProvider=true --profile personal
 ```
-Copy the output `RoleArn` into your GitHub repository secret: `AWS_ROLE_ARN`.
+Copy the stack outputs into your GitHub repository secrets:
+- `AWS_FRONTEND_ROLE_ARN`: Value of `FrontendRoleArn`
+- `AWS_BACKEND_ROLE_ARN`: Value of `BackendRoleArn`
+- `AWS_REGION`: `ap-south-1` (or your target region)
 
 ---
 

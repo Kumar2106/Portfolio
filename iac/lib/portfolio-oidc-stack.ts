@@ -25,6 +25,9 @@ export interface PortfolioOidcStackProps extends cdk.StackProps {
 
 export class PortfolioOidcStack extends cdk.Stack {
   public readonly oidcProvider: iam.IOpenIdConnectProvider;
+  public readonly frontendDeployRole: iam.Role;
+  public readonly backendDeployRole: iam.Role;
+  /** Alias pointing to frontendDeployRole for backward compatibility */
   public readonly deployRole: iam.Role;
 
   constructor(scope: Construct, id: string, props?: PortfolioOidcStackProps) {
@@ -72,16 +75,19 @@ export class PortfolioOidcStack extends cdk.Stack {
 
     const oidcPrincipal = new iam.OpenIdConnectPrincipal(this.oidcProvider, conditions);
 
-    // 3. IAM Role for GitHub Actions CI/CD Deployment
-    this.deployRole = new iam.Role(this, 'GitHubActionsDeployRole', {
-      roleName: 'GitHubActionsPortfolioDeployRole',
-      description: `Role assumed by GitHub Actions (${githubRepo}) for automated portfolio CDK and SAM deployments`,
+    // =========================================================================
+    // 3. FRONTEND DEPLOYMENT ROLE (AWS CDK, S3 Origin, CloudFront CDN)
+    // =========================================================================
+    this.frontendDeployRole = new iam.Role(this, 'GitHubActionsFrontendDeployRole', {
+      roleName: 'GitHubActionsPortfolioFrontendDeployRole',
+      description: `Role assumed by GitHub Actions (${githubRepo}) for frontend AWS CDK deployments`,
       assumedBy: oidcPrincipal,
       maxSessionDuration: cdk.Duration.hours(1),
     });
+    this.deployRole = this.frontendDeployRole;
 
-    // 4. Permissions required for AWS CDK v2 deployment via bootstrap roles
-    this.deployRole.addToPolicy(
+    // Permissions to assume CDK bootstrap roles
+    this.frontendDeployRole.addToPolicy(
       new iam.PolicyStatement({
         sid: 'CDKBootstrapRoleAssumption',
         effect: iam.Effect.ALLOW,
@@ -94,8 +100,8 @@ export class PortfolioOidcStack extends cdk.Stack {
       })
     );
 
-    // 5. Direct deployment & lookup permissions (SSM, CloudFormation, S3, CloudFront)
-    this.deployRole.addToPolicy(
+    // SSM bootstrap version lookup
+    this.frontendDeployRole.addToPolicy(
       new iam.PolicyStatement({
         sid: 'SSMBootstrapLookup',
         effect: iam.Effect.ALLOW,
@@ -106,9 +112,10 @@ export class PortfolioOidcStack extends cdk.Stack {
       })
     );
 
-    this.deployRole.addToPolicy(
+    // CloudFormation permissions for Frontend stack
+    this.frontendDeployRole.addToPolicy(
       new iam.PolicyStatement({
-        sid: 'CloudFormationDeployStatus',
+        sid: 'CloudFormationFrontendDeployStatus',
         effect: iam.Effect.ALLOW,
         actions: [
           'cloudformation:DescribeStacks',
@@ -128,16 +135,15 @@ export class PortfolioOidcStack extends cdk.Stack {
         ],
         resources: [
           `arn:aws:cloudformation:*:${this.account}:stack/Portfolio*/*`,
-          `arn:aws:cloudformation:*:${this.account}:stack/portfolio-*/*`,
-          `arn:aws:cloudformation:*:${this.account}:stack/aws-sam-cli-managed-default/*`,
           `arn:aws:cloudformation:*:${this.account}:changeSet/*/*`,
         ],
       })
     );
 
-    this.deployRole.addToPolicy(
+    // S3 asset deployment and bucket sync
+    this.frontendDeployRole.addToPolicy(
       new iam.PolicyStatement({
-        sid: 'S3AssetDeployment',
+        sid: 'S3FrontendAssetDeployment',
         effect: iam.Effect.ALLOW,
         actions: [
           's3:PutObject',
@@ -156,13 +162,12 @@ export class PortfolioOidcStack extends cdk.Stack {
           `arn:aws:s3:::cdk-*-assets-${this.account}-*/*`,
           `arn:aws:s3:::*portfolio*`,
           `arn:aws:s3:::*portfolio*/*`,
-          'arn:aws:s3:::aws-sam-cli-managed-*',
-          'arn:aws:s3:::aws-sam-cli-managed-*/*',
         ],
       })
     );
 
-    this.deployRole.addToPolicy(
+    // CloudFront cache invalidation
+    this.frontendDeployRole.addToPolicy(
       new iam.PolicyStatement({
         sid: 'CloudFrontInvalidation',
         effect: iam.Effect.ALLOW,
@@ -176,8 +181,74 @@ export class PortfolioOidcStack extends cdk.Stack {
       })
     );
 
-    // 6. Backend SAM Deployment Permissions (Lambda, API Gateway, IAM)
-    this.deployRole.addToPolicy(
+    // =========================================================================
+    // 4. BACKEND DEPLOYMENT ROLE (AWS SAM, Lambda, API Gateway, Amazon SES)
+    // =========================================================================
+    this.backendDeployRole = new iam.Role(this, 'GitHubActionsBackendDeployRole', {
+      roleName: 'GitHubActionsPortfolioBackendDeployRole',
+      description: `Role assumed by GitHub Actions (${githubRepo}) for backend AWS SAM deployments`,
+      assumedBy: oidcPrincipal,
+      maxSessionDuration: cdk.Duration.hours(1),
+    });
+
+    // CloudFormation permissions for Backend SAM stack
+    this.backendDeployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'CloudFormationBackendDeployStatus',
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'cloudformation:DescribeStacks',
+          'cloudformation:DescribeStackEvents',
+          'cloudformation:DescribeStackResources',
+          'cloudformation:DescribeStackResource',
+          'cloudformation:GetTemplate',
+          'cloudformation:GetTemplateSummary',
+          'cloudformation:ListStackResources',
+          'cloudformation:CreateStack',
+          'cloudformation:UpdateStack',
+          'cloudformation:DeleteStack',
+          'cloudformation:CreateChangeSet',
+          'cloudformation:ExecuteChangeSet',
+          'cloudformation:DescribeChangeSet',
+          'cloudformation:DeleteChangeSet',
+        ],
+        resources: [
+          `arn:aws:cloudformation:*:${this.account}:stack/portfolio-*/*`,
+          `arn:aws:cloudformation:*:${this.account}:stack/Portfolio*/*`,
+          `arn:aws:cloudformation:*:${this.account}:stack/aws-sam-cli-managed-default/*`,
+          `arn:aws:cloudformation:*:${this.account}:changeSet/*/*`,
+        ],
+      })
+    );
+
+    // S3 SAM packaging bucket
+    this.backendDeployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'SAMManagedS3Packaging',
+        effect: iam.Effect.ALLOW,
+        actions: [
+          's3:PutObject',
+          's3:GetObject',
+          's3:ListBucket',
+          's3:DeleteObject',
+          's3:GetBucketLocation',
+          's3:CreateBucket',
+          's3:PutBucketVersioning',
+          's3:PutEncryptionConfiguration',
+          's3:PutBucketPolicy',
+          's3:PutBucketPublicAccessBlock',
+        ],
+        resources: [
+          'arn:aws:s3:::aws-sam-cli-managed-*',
+          'arn:aws:s3:::aws-sam-cli-managed-*/*',
+          `arn:aws:s3:::*portfolio*`,
+          `arn:aws:s3:::*portfolio*/*`,
+        ],
+      })
+    );
+
+    // Lambda deployment permissions
+    this.backendDeployRole.addToPolicy(
       new iam.PolicyStatement({
         sid: 'LambdaSAMDeployment',
         effect: iam.Effect.ALLOW,
@@ -202,36 +273,28 @@ export class PortfolioOidcStack extends cdk.Stack {
       })
     );
 
-    this.deployRole.addToPolicy(
+    // API Gateway deployment permissions
+    this.backendDeployRole.addToPolicy(
       new iam.PolicyStatement({
-        sid: 'ApiGatewayCreateRestApi',
-        effect: iam.Effect.ALLOW,
-        actions: ['apigateway:POST'],
-        resources: [
-          `arn:aws:apigateway:${this.region}::/restapis`,
-        ],
-      })
-    );
-
-    this.deployRole.addToPolicy(
-      new iam.PolicyStatement({
-        sid: 'ApiGatewayManageRestApi',
+        sid: 'ApiGatewaySAMDeployment',
         effect: iam.Effect.ALLOW,
         actions: [
-          'apigateway:GET',
           'apigateway:POST',
+          'apigateway:GET',
           'apigateway:PUT',
           'apigateway:PATCH',
           'apigateway:DELETE',
         ],
         resources: [
-          `arn:aws:apigateway:${this.region}::/restapis/*`,
-          `arn:aws:apigateway:${this.region}::/tags/*`,
+          `arn:aws:apigateway:*::/restapis`,
+          `arn:aws:apigateway:*::/restapis/*`,
+          `arn:aws:apigateway:*::/tags/*`,
         ],
       })
     );
 
-    this.deployRole.addToPolicy(
+    // IAM pass role and execution role management for Lambda
+    this.backendDeployRole.addToPolicy(
       new iam.PolicyStatement({
         sid: 'IAMRoleSAMDeployment',
         effect: iam.Effect.ALLOW,
@@ -255,7 +318,7 @@ export class PortfolioOidcStack extends cdk.Stack {
       })
     );
 
-    this.deployRole.addToPolicy(
+    this.backendDeployRole.addToPolicy(
       new iam.PolicyStatement({
         sid: 'IAMAttachRolePolicySAMDeployment',
         effect: iam.Effect.ALLOW,
@@ -277,17 +340,37 @@ export class PortfolioOidcStack extends cdk.Stack {
       })
     );
 
-    // 6. Stack Outputs
-    new cdk.CfnOutput(this, 'RoleArn', {
-      value: this.deployRole.roleArn,
-      description: 'ARN of the IAM Role for GitHub Actions (store in AWS_ROLE_ARN secret)',
-      exportName: `${this.stackName}-RoleArn`,
+    // =========================================================================
+    // 5. STACK OUTPUTS
+    // =========================================================================
+    new cdk.CfnOutput(this, 'FrontendRoleArn', {
+      value: this.frontendDeployRole.roleArn,
+      description: 'ARN of the IAM Role for Frontend GitHub Actions deployment (AWS_FRONTEND_ROLE_ARN)',
+      exportName: `${this.stackName}-FrontendRoleArn`,
     });
 
-    new cdk.CfnOutput(this, 'RoleName', {
-      value: this.deployRole.roleName,
-      description: 'Name of the IAM Role for GitHub Actions',
-      exportName: `${this.stackName}-RoleName`,
+    new cdk.CfnOutput(this, 'FrontendRoleName', {
+      value: this.frontendDeployRole.roleName,
+      description: 'Name of the IAM Role for Frontend GitHub Actions deployment',
+      exportName: `${this.stackName}-FrontendRoleName`,
+    });
+
+    new cdk.CfnOutput(this, 'BackendRoleArn', {
+      value: this.backendDeployRole.roleArn,
+      description: 'ARN of the IAM Role for Backend GitHub Actions deployment (AWS_BACKEND_ROLE_ARN)',
+      exportName: `${this.stackName}-BackendRoleArn`,
+    });
+
+    new cdk.CfnOutput(this, 'BackendRoleName', {
+      value: this.backendDeployRole.roleName,
+      description: 'Name of the IAM Role for Backend GitHub Actions deployment',
+      exportName: `${this.stackName}-BackendRoleName`,
+    });
+
+    new cdk.CfnOutput(this, 'RoleArn', {
+      value: this.frontendDeployRole.roleArn,
+      description: 'Default role ARN (alias to Frontend role for backward compatibility)',
+      exportName: `${this.stackName}-RoleArn`,
     });
 
     new cdk.CfnOutput(this, 'OidcProviderArn', {
