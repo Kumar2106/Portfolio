@@ -1,6 +1,7 @@
 # Kumar Aditya — Senior Backend & DevOps Portfolio
 
-[![Deploy Portfolio to AWS](https://github.com/Kumar2106/Portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/Kumar2106/Portfolio/actions/workflows/deploy.yml)
+[![Deploy Frontend to AWS](https://github.com/Kumar2106/Portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/Kumar2106/Portfolio/actions/workflows/deploy.yml)
+[![Deploy Backend Contact API](https://github.com/Kumar2106/Portfolio/actions/workflows/deploy-backend.yml/badge.svg)](https://github.com/Kumar2106/Portfolio/actions/workflows/deploy-backend.yml)
 [![Live Site](https://img.shields.io/badge/Live-aditya.weinventify.com-00e5ff?style=flat&logo=amazon-aws)](https://aditya.weinventify.com)
 
 A modern, cloud-native developer portfolio application built with **Angular (Signals & Standalone Components)** and provisioned on AWS using **AWS CDK v2 (TypeScript)** with a private S3 origin, CloudFront CDN (Origin Access Control), Route 53, and ACM SSL, deployed via a secure, keyless **GitHub Actions OIDC** pipeline.
@@ -160,15 +161,26 @@ For more details, see the [Backend Documentation](backend/README.md).
 
 ---
 
-## ☁️ Deployment Pipeline (CI/CD)
+## ☁️ Deployment Pipelines (CI/CD)
 
-The portfolio is deployed to AWS via GitHub Actions using **AWS OpenID Connect (OIDC)** authentication (zero long-lived credentials stored in GitHub):
+The portfolio services are deployed to AWS via GitHub Actions using **AWS OpenID Connect (OIDC)** authentication (zero long-lived credentials stored in GitHub), decoupled using path filtering:
 
-1. Pushes to the `main` branch trigger `.github/workflows/deploy.yml`.
-2. Angular compiles the production bundle in `frontend/`.
-3. GitHub Actions assumes the AWS IAM OIDC Role.
-4. Static assets are synchronized to the private S3 origin bucket with `--delete`.
-5. A CloudFront cache invalidation (`/*`) is created to immediately propagate the latest version worldwide.
+### 1. Frontend & Hosting Pipeline (`.github/workflows/deploy.yml`)
+- **Trigger**: Pushes to `main` modifying `frontend/**`, `iac/**`, or `.github/workflows/deploy.yml`.
+- **Process**:
+  1. Compiles the production Angular bundle (`frontend/dist/portfolio-app/browser`).
+  2. Assumes AWS IAM OIDC Role (`AWS_ROLE_ARN`).
+  3. Synchronizes static assets to the private S3 bucket with `--delete`.
+  4. Triggers CloudFront CDN cache invalidation (`/*`) for immediate worldwide propagation.
+
+### 2. Backend Serverless API Pipeline (`.github/workflows/deploy-backend.yml`)
+- **Trigger**: Pushes to `main` modifying `backend/**` or `.github/workflows/deploy-backend.yml` (or via `workflow_dispatch`).
+- **Process**:
+  1. Runs Vitest unit tests (100% passing) and compiles TypeScript.
+  2. Validates SAM template with `sam validate --lint`.
+  3. Builds SAM package via `sam build`.
+  4. Assumes AWS IAM OIDC Role (`AWS_ROLE_ARN`) and runs `sam deploy --resolve-s3`.
+  5. Exports public API Gateway endpoint for contact form submissions.
 
 For complete setup instructions, see the [AWS Deployment Guide](deployment_guide.md).
 

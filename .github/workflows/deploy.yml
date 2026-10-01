@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'frontend/**'
+      - 'iac/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 # Permissions required to request JWT/OIDC token from GitHub OIDC provider
