@@ -74,9 +74,22 @@ export class App implements OnDestroy {
   // Form submission status
   protected readonly formStatus = signal<'idle' | 'sending' | 'success' | 'error'>('idle');
   protected readonly formErrorMessage = signal<string>('');
-  private readonly contactApiUrl =
-    (typeof window !== 'undefined' && (window as any)?.__ENV?.CONTACT_API_URL) ||
-    'https://f50b2igl9b.execute-api.ap-south-1.amazonaws.com/prod/contact';
+  private readonly contactApiUrl = (() => {
+    if (typeof window !== 'undefined' && (window as any)?.__ENV?.CONTACT_API_URL) {
+      return (window as any).__ENV.CONTACT_API_URL;
+    }
+    // In local development or testing environments, default to local simulation (empty URL)
+    if (
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname === '')
+    ) {
+      return '';
+    }
+    // On deployed environments, route to live AWS Contact API
+    return 'https://f50b2igl9b.execute-api.ap-south-1.amazonaws.com/prod/contact';
+  })();
   protected readonly formErrors = {
     name: signal(false),
     email: signal(false),

@@ -118,5 +118,6 @@ jobs:
 
       - name: Log Deployed Website URL
         run: |
-          echo "::notice title=Live Website URL::https://aditya.weinventify.com"
-          echo "Public Website URL: https://aditya.weinventify.com"
+          DEPLOYED_DOMAIN="${{ vars.DOMAIN_NAME || 'aditya.weinventify.com' }}"
+          echo "::notice title=Live Website URL::https://${DEPLOYED_DOMAIN}"
+          echo "Public Website URL: https://${DEPLOYED_DOMAIN}"

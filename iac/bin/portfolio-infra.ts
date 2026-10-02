@@ -15,12 +15,32 @@ const hostedZoneId =
   process.env.HOSTED_ZONE_ID || app.node.tryGetContext('hostedZoneId');
 
 // Reusing existing live CloudFront distribution and S3 origin bucket
-const existingDistributionId =
-  process.env.DISTRIBUTION_ID || app.node.tryGetContext('distributionId');
-const existingBucketName =
-  process.env.BUCKET_NAME || app.node.tryGetContext('bucketName');
-const existingDistributionDomainName =
-  process.env.DISTRIBUTION_DOMAIN_NAME || app.node.tryGetContext('distributionDomainName');
+// Resolve hosting target resources as an atomic group to prevent mismatched overrides
+const hasEnvOverride = Boolean(
+  process.env.DISTRIBUTION_ID ||
+  process.env.BUCKET_NAME ||
+  process.env.DISTRIBUTION_DOMAIN_NAME
+);
+
+let existingDistributionId: string | undefined;
+let existingBucketName: string | undefined;
+let existingDistributionDomainName: string | undefined;
+
+if (hasEnvOverride) {
+  if (!process.env.DISTRIBUTION_ID || !process.env.BUCKET_NAME) {
+    throw new Error(
+      'When overriding hosting resources via environment variables, both DISTRIBUTION_ID and BUCKET_NAME must be specified together.'
+    );
+  }
+  existingDistributionId = process.env.DISTRIBUTION_ID;
+  existingBucketName = process.env.BUCKET_NAME;
+  existingDistributionDomainName = process.env.DISTRIBUTION_DOMAIN_NAME;
+} else {
+  // Use paired context defaults from cdk.json
+  existingDistributionId = app.node.tryGetContext('distributionId');
+  existingBucketName = app.node.tryGetContext('bucketName');
+  existingDistributionDomainName = app.node.tryGetContext('distributionDomainName');
+}
 
 if (
   (existingDistributionId && !existingBucketName) ||
