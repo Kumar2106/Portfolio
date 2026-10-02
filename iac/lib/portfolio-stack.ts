@@ -49,7 +49,6 @@ export class PortfolioStack extends cdk.Stack {
           distributionId: props.existingDistributionId,
           domainName:
             props.existingDistributionDomainName ||
-            props.domainName ||
             'd1up7aq7s8u9o9.cloudfront.net',
         }
       );

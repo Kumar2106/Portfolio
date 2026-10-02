@@ -104,10 +104,12 @@ jobs:
 
       - name: Deploy Infrastructure & Assets via CDK
         env:
-          DISTRIBUTION_ID: ${{ vars.DISTRIBUTION_ID || 'E2GV3YO0H8G1TK' }}
-          BUCKET_NAME: ${{ vars.BUCKET_NAME || 'kumar-aditya-portfolio' }}
-          DISTRIBUTION_DOMAIN_NAME: ${{ vars.DISTRIBUTION_DOMAIN_NAME || 'd1up7aq7s8u9o9.cloudfront.net' }}
-          DOMAIN_NAME: ${{ vars.DOMAIN_NAME || 'aditya.weinventify.com' }}
+          DISTRIBUTION_ID: ${{ vars.DISTRIBUTION_ID }}
+          BUCKET_NAME: ${{ vars.BUCKET_NAME }}
+          DISTRIBUTION_DOMAIN_NAME: ${{ vars.DISTRIBUTION_DOMAIN_NAME }}
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN || vars.CERTIFICATE_ARN }}
+          HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID || vars.HOSTED_ZONE_ID }}
         run: |
           cd iac
           npx cdk deploy PortfolioStack --require-approval never
