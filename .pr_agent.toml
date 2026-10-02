@@ -1,6 +1,6 @@
 [config]
 model = "gemini/gemini-3.8-flash"
-fallback_models = ["gemini/gemini-3.5-flash"]
+fallback_models = ["gemini/gemini-3.5-flash", "gemini/gemini-2.5-flash"]
 git_provider = "github"
 
 [github_action_config]

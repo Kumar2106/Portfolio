@@ -29,7 +29,7 @@ jobs:
 
           # LiteLLM routing to Google Gemini free tier
           CONFIG.model: "gemini/gemini-3.8-flash"
-          CONFIG.fallback_models: '["gemini/gemini-3.5-flash"]'
+          CONFIG.fallback_models: '["gemini/gemini-3.5-flash", "gemini/gemini-2.5-flash"]'
 
           # Automatically run review on PR events
           GITHUB_ACTION_CONFIG.AUTO_REVIEW: "true"

@@ -113,13 +113,13 @@ jobs:
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          role-to-assume: ${{ secrets.AWS_BACKEND_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
 
       - name: Deploy SAM Application
         env:
           INPUT_STAGE: ${{ inputs.stage }}
-          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
           RECIPIENT_EMAIL: ${{ secrets.CONTACT_RECIPIENT_EMAIL || 'ka09934147002@gmail.com' }}
           SENDER_EMAIL: ${{ secrets.CONTACT_SENDER_EMAIL || 'ka09934147002@gmail.com' }}
         run: |

@@ -10,6 +10,10 @@ NC='\033[0m'
 
 echo -e "${BLUE}=== Kumar Aditya Portfolio - AWS CDK Deployment ===${NC}\n"
 
+# Export AWS profile (defaults to personal)
+export AWS_PROFILE="${AWS_PROFILE:-personal}"
+echo -e "${BLUE}Using AWS profile: ${YELLOW}${AWS_PROFILE}${NC}"
+
 # Verify AWS CLI
 if ! command -v aws &> /dev/null; then
     echo -e "${RED}Error: AWS CLI is not installed. Please install it first.${NC}"
@@ -19,10 +23,10 @@ fi
 # Verify AWS credentials
 echo -e "${BLUE}Checking AWS CLI credentials...${NC}"
 if ! aws sts get-caller-identity &> /dev/null; then
-    echo -e "${RED}Error: Invalid or missing AWS credentials. Run 'aws configure' first.${NC}"
+    echo -e "${RED}Error: Invalid or missing AWS credentials for profile '${AWS_PROFILE}'. Run 'aws configure --profile ${AWS_PROFILE}' first.${NC}"
     exit 1
 fi
-echo -e "${GREEN}✔ Credentials verified.${NC}\n"
+echo -e "${GREEN}✔ Credentials verified for profile '${AWS_PROFILE}'.${NC}\n"
 
 # Step 1: Build Frontend Application
 echo -e "${BLUE}Step 1: Building Angular frontend production bundle...${NC}"

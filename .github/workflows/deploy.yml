@@ -52,8 +52,8 @@ jobs:
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_FRONTEND_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
 
       - name: Deploy Infrastructure & Assets via CDK
         env:
@@ -62,4 +62,4 @@ jobs:
           HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
         run: |
           cd iac
-          npx cdk deploy --require-approval never
+          npx cdk deploy PortfolioStack --require-approval never
