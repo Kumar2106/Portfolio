@@ -40,7 +40,8 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref StageName
-      # Throttle every method on the stage to stop the public endpoint being used to flood SES
+      # Stage-wide ceiling shared by all callers: caps SES volume and cost if the public endpoint is abused.
+      # It is not per-client isolation; per-IP limiting would need an AWS WAF rate-based rule.
       MethodSettings:
         - ResourcePath: '/*'
           HttpMethod: '*'

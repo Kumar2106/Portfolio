@@ -90,7 +90,10 @@ Once deployment completes, the CDK outputs the:
 - `SiteUrl`: The live website URL.
 
 > [!NOTE]
-> To deploy into an already-running bucket and distribution instead of creating new ones, pass both `-c distributionId=...` and `-c bucketName=...` (or set `DISTRIBUTION_ID` and `BUCKET_NAME`). The stack then imports those resources and uploads assets without pruning existing objects.
+> To deploy into an already-running bucket and distribution instead of creating new ones, pass `-c distributionId=...`, `-c bucketName=...` and `-c distributionDomainName=...` together (or set `DISTRIBUTION_ID`, `BUCKET_NAME` and `DISTRIBUTION_DOMAIN_NAME`). The stack then imports those resources and uploads assets without pruning existing objects.
+
+> [!WARNING]
+> Imported resources are not reconfigured by CDK, so they do not inherit the secure defaults applied to newly created ones. Before using reuse mode, confirm the existing bucket has all four S3 Block Public Access settings enabled and a bucket policy that denies non-TLS requests (`aws:SecureTransport`), and that the existing distribution uses Origin Access Control, redirects HTTP to HTTPS, and enforces TLS 1.2 or newer (`TLSv1.2_2021`).
 
 ---
 
@@ -140,11 +143,11 @@ Add these in GitHub (`Settings` -> `Secrets and variables` -> `Actions`).
 
 **Variables** (optional; override the `cdk.json` context defaults)
 - `DOMAIN_NAME`: custom domain, e.g. `aditya.weinventify.com`
-- `DISTRIBUTION_ID`, `BUCKET_NAME`, `DISTRIBUTION_DOMAIN_NAME`: existing hosting resources to deploy into (`DISTRIBUTION_ID` and `BUCKET_NAME` must be set together)
+- `DISTRIBUTION_ID`, `BUCKET_NAME`, `DISTRIBUTION_DOMAIN_NAME`: existing hosting resources to deploy into (all three must be set together)
 
 ### Step 3: Automatic Deployment
 
-On every pull request to `main`, `.github/workflows/deploy.yml` runs the frontend tests, builds the bundle, and synthesizes the CDK app. On push to `main` (or `workflow_dispatch`) it then:
+On pull requests to `main` that touch `frontend/**`, `iac/**` or the workflow file, `.github/workflows/deploy.yml` runs the frontend tests, builds the bundle, and synthesizes the CDK app. On push to `main` (or `workflow_dispatch`) it then:
 1. Downloads the built frontend artifact.
 2. Authenticates to AWS with the frontend OIDC role.
 3. Runs `npx cdk deploy PortfolioStack --require-approval never`, which uploads the assets to S3 and invalidates the CloudFront cache.

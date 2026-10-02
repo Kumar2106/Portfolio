@@ -13,7 +13,7 @@ The infrastructure provisions a production-grade, highly available, and secure s
    - Server-side encryption: S3-Managed (`AES-256`).
    - Strict SSL enforcement (`aws:SecureTransport: true`).
    - Clean lifecycle deletion for ephemeral environments.
-   - **Reuse mode**: when `distributionId` and `bucketName` are supplied (via `cdk.json` context or the `DISTRIBUTION_ID` / `BUCKET_NAME` environment variables), the stack imports the existing live bucket and distribution instead of creating new ones, and deploys assets without pruning existing objects.
+   - **Reuse mode**: when `distributionId`, `bucketName` and `distributionDomainName` are supplied together (via `cdk.json` context or the `DISTRIBUTION_ID` / `BUCKET_NAME` / `DISTRIBUTION_DOMAIN_NAME` environment variables), the stack imports the existing live bucket and distribution instead of creating new ones, and deploys assets without pruning existing objects. Imported resources keep their existing configuration, so verify Block Public Access, TLS-only bucket policy, OAC, HTTPS redirect and TLS 1.2+ on them yourself.
 2. **CloudFront CDN Distribution**:
    - Origin configured with **Origin Access Control (OAC)** (zero direct public S3 access).
    - HTTPS redirect with TLSv1.2_2021 minimum protocol security.

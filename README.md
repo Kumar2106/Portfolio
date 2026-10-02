@@ -165,7 +165,7 @@ For more details, see the [Backend Documentation](backend/README.md).
 
 The portfolio services are deployed to AWS via GitHub Actions using **AWS OpenID Connect (OIDC)** authentication (zero long-lived credentials stored in GitHub), decoupled using path filtering:
 
-Both pipelines run their test/validate job on every pull request to `main`; the deploy job runs only on pushes to `main` (or `workflow_dispatch`).
+Each pipeline runs its test/validate job on pull requests to `main` that match its path filters; the deploy job runs only on pushes to `main` (or `workflow_dispatch`).
 
 ### 1. Frontend & Hosting Pipeline (`.github/workflows/deploy.yml`)
 - **Trigger**: Changes to `frontend/**`, `iac/**`, or `.github/workflows/deploy.yml`.
