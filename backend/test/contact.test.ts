@@ -8,10 +8,13 @@ const { mockSend } = vi.hoisted(() => ({
 
 vi.mock('@aws-sdk/client-ses', () => {
   return {
-    SESClient: vi.fn().mockImplementation(() => ({
-      send: mockSend,
-    })),
-    SendEmailCommand: vi.fn().mockImplementation((args: any) => args),
+    // Regular functions (not arrows) so the mocks can be invoked with `new`
+    SESClient: vi.fn(function () {
+      return { send: mockSend };
+    }),
+    SendEmailCommand: vi.fn(function (args: any) {
+      return args;
+    }),
   };
 });
 
