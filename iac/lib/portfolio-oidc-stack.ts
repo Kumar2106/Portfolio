@@ -217,26 +217,60 @@ export class PortfolioOidcStack extends cdk.Stack {
           `arn:aws:cloudformation:*:${this.account}:stack/Portfolio*/*`,
           `arn:aws:cloudformation:*:${this.account}:stack/aws-sam-cli-managed-default/*`,
           `arn:aws:cloudformation:*:${this.account}:changeSet/*/*`,
+          'arn:aws:cloudformation:*:aws:transform/*',
         ],
       })
     );
 
-    // S3 SAM packaging bucket
+    // Global CloudFormation template inspection permissions
+    this.backendDeployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'CloudFormationTemplateInspection',
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'cloudformation:GetTemplateSummary',
+          'cloudformation:ValidateTemplate',
+        ],
+        resources: ['*'],
+      })
+    );
+
+    // S3 SAM packaging bucket creation and cleanup
+    this.backendDeployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'SAMManagedS3BucketLifecycle',
+        effect: iam.Effect.ALLOW,
+        actions: [
+          's3:CreateBucket',
+          's3:DeleteBucket',
+        ],
+        resources: [
+          'arn:aws:s3:::aws-sam-cli-managed-*',
+        ],
+      })
+    );
+
+    // S3 SAM packaging bucket management (scoped strictly to own AWS account)
     this.backendDeployRole.addToPolicy(
       new iam.PolicyStatement({
         sid: 'SAMManagedS3Packaging',
         effect: iam.Effect.ALLOW,
         actions: [
-          's3:PutObject',
-          's3:GetObject',
-          's3:ListBucket',
-          's3:DeleteObject',
           's3:GetBucketLocation',
-          's3:CreateBucket',
-          's3:PutBucketVersioning',
-          's3:PutEncryptionConfiguration',
+          's3:GetObject',
+          's3:PutObject',
+          's3:DeleteObject',
+          's3:ListBucket',
           's3:PutBucketPolicy',
+          's3:GetBucketPolicy',
           's3:PutBucketPublicAccessBlock',
+          's3:GetBucketPublicAccessBlock',
+          's3:PutBucketVersioning',
+          's3:GetBucketVersioning',
+          's3:PutEncryptionConfiguration',
+          's3:GetEncryptionConfiguration',
+          's3:PutBucketTagging',
+          's3:GetBucketTagging',
         ],
         resources: [
           'arn:aws:s3:::aws-sam-cli-managed-*',
@@ -244,6 +278,11 @@ export class PortfolioOidcStack extends cdk.Stack {
           `arn:aws:s3:::*portfolio*`,
           `arn:aws:s3:::*portfolio*/*`,
         ],
+        conditions: {
+          StringEquals: {
+            'aws:ResourceAccount': this.account,
+          },
+        },
       })
     );
 
