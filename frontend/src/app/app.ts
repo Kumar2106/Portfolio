@@ -334,7 +334,8 @@ export class App implements OnDestroy {
 
     // Same pattern as the backend: domain labels exclude '.', so it can't backtrack polynomially
     const emailRegex = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
-    if (!this.contactForm.email().trim() || !emailRegex.test(this.contactForm.email())) {
+    const email = this.contactForm.email().trim();
+    if (!email || !emailRegex.test(email)) {
       this.formErrors.email.set(true);
       hasErrors = true;
     }

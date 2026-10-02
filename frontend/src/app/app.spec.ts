@@ -66,4 +66,32 @@ describe('App', () => {
     expect(app['formErrors'].message()).toBe(false);
     expect(app['formStatus']()).toBe('sending');
   });
+
+  it('should accept an email with surrounding whitespace (e.g. from autofill)', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+
+    app['contactForm'].name.set('Jane Doe');
+    app['contactForm'].email.set('  jane@example.com ');
+    app['contactForm'].message.set('Excited to collaborate!');
+
+    app['onSubmit'](new Event('submit'));
+
+    expect(app['formErrors'].email()).toBe(false);
+    expect(app['formStatus']()).toBe('sending');
+  });
+
+  it('should reject an email with an empty domain label', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+
+    app['contactForm'].name.set('Jane Doe');
+    app['contactForm'].email.set('jane@example..com');
+    app['contactForm'].message.set('Excited to collaborate!');
+
+    app['onSubmit'](new Event('submit'));
+
+    expect(app['formErrors'].email()).toBe(true);
+    expect(app['formStatus']()).toBe('idle');
+  });
 });
