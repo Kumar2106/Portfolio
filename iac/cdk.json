@@ -16,6 +16,10 @@
     ]
   },
   "context": {
+    "domainName": "aditya.weinventify.com",
+    "distributionId": "E2GV3YO0H8G1TK",
+    "bucketName": "kumar-aditya-portfolio",
+    "distributionDomainName": "d1up7aq7s8u9o9.cloudfront.net",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [

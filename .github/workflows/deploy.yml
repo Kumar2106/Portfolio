@@ -1,4 +1,4 @@
-name: Deploy Portfolio to AWS
+name: Deploy Portfolio Frontend to AWS
 
 on:
   push:
@@ -8,15 +8,22 @@ on:
       - 'frontend/**'
       - 'iac/**'
       - '.github/workflows/deploy.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - 'iac/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
-# Permissions required to request JWT/OIDC token from GitHub OIDC provider
+# Default repository permissions (read-only)
 permissions:
-  id-token: write
   contents: read
 
 jobs:
-  deploy:
+  test-and-build:
+    name: Test & Build Frontend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -36,14 +43,56 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Build Frontend Application
-        env:
-          CI: true
+      - name: Run Frontend Tests
         run: |
           cd frontend
-          npm run build
+          CI=true NG_CLI_ANALYTICS=false npm test -- --watch=false
 
-      - name: Install IaC Dependencies
+      - name: Build Frontend Application
+        run: |
+          cd frontend
+          CI=true npm run build
+
+      - name: Upload Built Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/portfolio-app/browser
+          retention-days: 1
+
+      - name: Install & Build IaC
+        run: |
+          cd iac
+          npm ci
+          npm run build
+          npx cdk synth
+
+  deploy:
+    name: Deploy to AWS
+    needs: test-and-build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: iac/package-lock.json
+
+      - name: Download Built Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/portfolio-app/browser
+
+      - name: Install IaC Dependencies & Build
         run: |
           cd iac
           npm ci
@@ -57,9 +106,20 @@ jobs:
 
       - name: Deploy Infrastructure & Assets via CDK
         env:
-          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
-          CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN }}
-          HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
+          DISTRIBUTION_ID: ${{ vars.DISTRIBUTION_ID }}
+          BUCKET_NAME: ${{ vars.BUCKET_NAME }}
+          DISTRIBUTION_DOMAIN_NAME: ${{ vars.DISTRIBUTION_DOMAIN_NAME }}
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN || vars.CERTIFICATE_ARN }}
+          HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID || vars.HOSTED_ZONE_ID }}
         run: |
           cd iac
           npx cdk deploy PortfolioStack --require-approval never
+
+      - name: Log Deployed Website URL
+        env:
+          DEPLOYED_DOMAIN: ${{ vars.DOMAIN_NAME || 'aditya.weinventify.com' }}
+        run: |
+          [[ "$DEPLOYED_DOMAIN" =~ ^[A-Za-z0-9.-]+$ ]] || exit 1
+          echo "::notice title=Live Website URL::https://${DEPLOYED_DOMAIN}"
+          echo "Public Website URL: https://${DEPLOYED_DOMAIN}"

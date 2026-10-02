@@ -6,15 +6,54 @@ import { PortfolioOidcStack } from '../lib/portfolio-oidc-stack';
 
 const app = new cdk.App();
 
-// Context values can be supplied via cdk.json or CLI flags:
-// -c domainName=aditya.weinventify.com -c certificateArn=arn:aws:acm:... -c hostedZoneId=Z...
-const domainName = app.node.tryGetContext('domainName') || process.env.DOMAIN_NAME;
-const certificateArn = app.node.tryGetContext('certificateArn') || process.env.CERTIFICATE_ARN;
-const hostedZoneId = app.node.tryGetContext('hostedZoneId') || process.env.HOSTED_ZONE_ID;
+// Configuration values loaded from environment variables or cdk.json context
+const domainName =
+  process.env.DOMAIN_NAME || app.node.tryGetContext('domainName');
+const certificateArn =
+  process.env.CERTIFICATE_ARN || app.node.tryGetContext('certificateArn');
+const hostedZoneId =
+  process.env.HOSTED_ZONE_ID || app.node.tryGetContext('hostedZoneId');
+
+// Reusing existing live CloudFront distribution and S3 origin bucket
+// Resolve hosting target resources as an atomic group to prevent mismatched overrides
+const hasEnvOverride = Boolean(
+  process.env.DISTRIBUTION_ID ||
+  process.env.BUCKET_NAME ||
+  process.env.DISTRIBUTION_DOMAIN_NAME
+);
+
+let existingDistributionId: string | undefined;
+let existingBucketName: string | undefined;
+let existingDistributionDomainName: string | undefined;
+
+if (hasEnvOverride) {
+  if (!process.env.DISTRIBUTION_ID || !process.env.BUCKET_NAME) {
+    throw new Error(
+      'When overriding hosting resources via environment variables, both DISTRIBUTION_ID and BUCKET_NAME must be specified together.'
+    );
+  }
+  existingDistributionId = process.env.DISTRIBUTION_ID;
+  existingBucketName = process.env.BUCKET_NAME;
+  existingDistributionDomainName = process.env.DISTRIBUTION_DOMAIN_NAME;
+} else {
+  // Use paired context defaults from cdk.json
+  existingDistributionId = app.node.tryGetContext('distributionId');
+  existingBucketName = app.node.tryGetContext('bucketName');
+  existingDistributionDomainName = app.node.tryGetContext('distributionDomainName');
+}
+
+if (
+  (existingDistributionId && !existingBucketName) ||
+  (!existingDistributionId && existingBucketName)
+) {
+  throw new Error(
+    'Both distributionId and bucketName must be specified together to reuse existing infrastructure.'
+  );
+}
 
 const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
+  region: process.env.CDK_DEFAULT_REGION || 'ap-south-1',
 };
 
 const existingOidcProviderContext = app.node.tryGetContext('existingOidcProvider');
@@ -36,6 +75,9 @@ new PortfolioStack(app, 'PortfolioStack', {
   domainName,
   certificateArn,
   hostedZoneId,
+  existingBucketName,
+  existingDistributionId,
+  existingDistributionDomainName,
   env,
   description: 'Production AWS infrastructure for Kumar Aditya Portfolio (S3, CloudFront OAC, SPA Routing)',
 });
