@@ -20,7 +20,7 @@ graph LR
 - **Input Validation**: Requires name, email, and message; validates email syntax; enforces length limits (name 100, email 254, message 5000 characters); strips line breaks from header fields.
 - **Abuse Protection**: API Gateway throttling shared by all callers (`POST /contact` 1 req/s, burst 1, matching the SES sandbox send rate; other methods 2 req/s, burst 5) caps SES volume and cost, and CORS is restricted to the portfolio origin (`AllowedOrigin` parameter). Per-client limiting would require an AWS WAF rate-based rule.
 - **Amazon SES**: Dual HTML and plain-text email delivery with `Reply-To` automatically set to the sender's email.
-- **Least-Privilege IAM**: the function may only call `ses:SendEmail` for the configured sender and recipient identities.
+- **Least-Privilege IAM**: the function may only call `ses:SendEmail` with `ses:FromAddress` pinned to the configured sender, so it cannot send as any other address.
 - **ARM64 Architecture**: Low-latency, cost-efficient execution on AWS Graviton.
 
 ---
