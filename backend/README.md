@@ -18,7 +18,7 @@ graph LR
 
 ### Key Highlights
 - **Input Validation**: Requires name, email, and message; validates email syntax; enforces length limits (name 100, email 254, message 5000 characters); strips line breaks from header fields.
-- **Abuse Protection**: a stage-wide API Gateway throttle (2 req/s, burst 5, shared by all callers) caps SES volume and cost, and CORS is restricted to the portfolio origin (`AllowedOrigin` parameter). Per-client limiting would require an AWS WAF rate-based rule.
+- **Abuse Protection**: API Gateway throttling shared by all callers (`POST /contact` 1 req/s, burst 1, matching the SES sandbox send rate; other methods 2 req/s, burst 5) caps SES volume and cost, and CORS is restricted to the portfolio origin (`AllowedOrigin` parameter). Per-client limiting would require an AWS WAF rate-based rule.
 - **Amazon SES**: Dual HTML and plain-text email delivery with `Reply-To` automatically set to the sender's email.
 - **Least-Privilege IAM**: the function may only call `ses:SendEmail` for the configured sender and recipient identities.
 - **ARM64 Architecture**: Low-latency, cost-efficient execution on AWS Graviton.
@@ -78,16 +78,20 @@ curl -X POST http://localhost:3000/contact \
 #### 1. Verify SES Identities (One-Time Setup)
 Mail is sent from `no-reply@aditya.weinventify.com`, an address on a verified **domain identity**. It's DKIM-signed so it passes DMARC at the recipient, and it needs no mailbox because nothing is ever delivered to it. Visitor replies go to the visitor via `Reply-To`.
 
+SES identities are regional, so create them in the same region the stack is deployed to (`sam deploy` / the `AWS_REGION` secret, default `ap-south-1`):
+
 ```bash
+DEPLOY_REGION=ap-south-1
+
 # Domain identity with Easy DKIM; add the three returned tokens as CNAMEs
 # <token>._domainkey.aditya.weinventify.com -> <token>.dkim.amazonses.com in Route 53
-aws sesv2 create-email-identity --email-identity aditya.weinventify.com --region ap-south-1
+aws sesv2 create-email-identity --email-identity aditya.weinventify.com --region "$DEPLOY_REGION"
 
 # While the account is in the SES sandbox, the recipient must also be verified (click the emailed link)
-aws ses verify-email-identity --email-address ka09934147002@gmail.com --region ap-south-1
+aws ses verify-email-identity --email-address ka09934147002@gmail.com --region "$DEPLOY_REGION"
 ```
 
-The sandbox limits sending to verified recipients (200 emails/day, 1/sec). That's enough here because every message goes to the one verified inbox, so SES production access isn't required.
+The sandbox limits sending to verified recipients (200 emails/day, 1/sec). That's enough here because every message goes to the one verified inbox, so SES production access isn't required. `POST /contact` is throttled to 1 request/sec (burst 1) to stay within the sandbox send rate.
 
 #### 2. Deploy SAM Application
 ```bash

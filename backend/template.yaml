@@ -47,6 +47,18 @@ Resources:
           HttpMethod: '*'
           ThrottlingRateLimit: 2
           ThrottlingBurstLimit: 5
+        # Each POST sends one email: keep it within the SES sandbox send rate (1/sec). CORS preflight
+        # (OPTIONS) stays on the looser default above so it never consumes the POST allowance.
+        - ResourcePath: '/~1contact'
+          HttpMethod: POST
+          ThrottlingRateLimit: 1
+          ThrottlingBurstLimit: 1
+      # API Gateway's own errors (e.g. 429 from throttling) carry CORS headers so the browser can read them
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${AllowedOrigin}'"
       Cors:
         AllowMethods: "'GET,POST,OPTIONS'"
         AllowHeaders: "'Content-Type'"
