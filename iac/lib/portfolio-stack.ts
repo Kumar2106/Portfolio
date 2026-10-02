@@ -19,98 +19,125 @@ export interface PortfolioStackProps extends cdk.StackProps {
   readonly certificateArn?: string;
   /** Optional Route 53 Hosted Zone ID to create DNS alias records */
   readonly hostedZoneId?: string;
+  /** Optional existing S3 bucket name to reuse (e.g. kumar-aditya-portfolio) */
+  readonly existingBucketName?: string;
+  /** Optional existing CloudFront distribution ID to reuse (e.g. E2GV3YO0H8G1TK) */
+  readonly existingDistributionId?: string;
+  /** Optional existing CloudFront distribution domain name (e.g. d1up7aq7s8u9o9.cloudfront.net) */
+  readonly existingDistributionDomainName?: string;
 }
 
 export class PortfolioStack extends cdk.Stack {
-  public readonly bucket: s3.Bucket;
-  public readonly distribution: cloudfront.Distribution;
+  public readonly bucket: s3.IBucket;
+  public readonly distribution: cloudfront.IDistribution;
 
   constructor(scope: Construct, id: string, props?: PortfolioStackProps) {
     super(scope, id, props);
 
-    // 1. Private S3 Origin Bucket (Blocked public access, SSL enforced)
-    this.bucket = new s3.Bucket(this, 'PortfolioFrontendBucket', {
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      enforceSSL: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-    });
-
-    // 2. Custom Domain & Certificate Setup (Optional)
-    if (Boolean(props?.domainName) !== Boolean(props?.certificateArn)) {
-      throw new Error('domainName and certificateArn must be set together');
-    }
-    if (props?.hostedZoneId && !props?.domainName) {
-      throw new Error('hostedZoneId requires domainName and certificateArn');
-    }
-
-    let certificate: acm.ICertificate | undefined;
-    let domainNames: string[] | undefined;
-
-    if (props?.domainName && props?.certificateArn) {
-      domainNames = [props.domainName];
-      certificate = acm.Certificate.fromCertificateArn(
+    if (props?.existingBucketName && props?.existingDistributionId) {
+      // 1. Reuse existing live S3 bucket and CloudFront distribution
+      this.bucket = s3.Bucket.fromBucketName(
         this,
-        'SiteCertificate',
-        props.certificateArn
+        'PortfolioFrontendBucket',
+        props.existingBucketName
       );
-    }
 
-    // 3. CloudFront CDN Distribution with Origin Access Control (OAC) & SPA Error Routing
-    this.distribution = new cloudfront.Distribution(this, 'PortfolioDistribution', {
-      comment: 'CloudFront CDN distribution for Kumar Aditya Portfolio',
-      defaultRootObject: 'index.html',
-      defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(this.bucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-        compress: true,
-      },
-      errorResponses: [
-        // SPA Routing: Redirect 403 / 404 to /index.html with HTTP 200
+      this.distribution = cloudfront.Distribution.fromDistributionAttributes(
+        this,
+        'PortfolioDistribution',
         {
-          httpStatus: 403,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-          ttl: cdk.Duration.seconds(10),
+          distributionId: props.existingDistributionId,
+          domainName:
+            props.existingDistributionDomainName ||
+            props.domainName ||
+            'd1up7aq7s8u9o9.cloudfront.net',
+        }
+      );
+    } else {
+      // 1. Private S3 Origin Bucket (Blocked public access, SSL enforced)
+      this.bucket = new s3.Bucket(this, 'PortfolioFrontendBucket', {
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        encryption: s3.BucketEncryption.S3_MANAGED,
+        enforceSSL: true,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+      });
+
+      // 2. Custom Domain & Certificate Setup (Optional)
+      if (Boolean(props?.domainName) !== Boolean(props?.certificateArn)) {
+        throw new Error('domainName and certificateArn must be set together');
+      }
+      if (props?.hostedZoneId && !props?.domainName) {
+        throw new Error('hostedZoneId requires domainName and certificateArn');
+      }
+
+      let certificate: acm.ICertificate | undefined;
+      let domainNames: string[] | undefined;
+
+      if (props?.domainName && props?.certificateArn) {
+        domainNames = [props.domainName];
+        certificate = acm.Certificate.fromCertificateArn(
+          this,
+          'SiteCertificate',
+          props.certificateArn
+        );
+      }
+
+      // 3. CloudFront CDN Distribution with Origin Access Control (OAC) & SPA Error Routing
+      this.distribution = new cloudfront.Distribution(this, 'PortfolioDistribution', {
+        comment: 'CloudFront CDN distribution for Kumar Aditya Portfolio',
+        defaultRootObject: 'index.html',
+        defaultBehavior: {
+          origin: origins.S3BucketOrigin.withOriginAccessControl(this.bucket as s3.Bucket),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
         },
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-          ttl: cdk.Duration.seconds(10),
-        },
-      ],
-      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-      certificate,
-      domainNames,
-    });
-
-    // 4. Route 53 DNS Alias Records (Optional)
-    if (props?.domainName && props?.hostedZoneId) {
-      // Extract root apex zone name from subdomain (e.g. aditya.weinventify.com -> weinventify.com)
-      const domainParts = props.domainName.split('.');
-      const apexZoneName = domainParts.slice(-2).join('.');
-
-      const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'SiteHostedZone', {
-        hostedZoneId: props.hostedZoneId,
-        zoneName: apexZoneName,
+        errorResponses: [
+          // SPA Routing: Redirect 403 / 404 to /index.html with HTTP 200
+          {
+            httpStatus: 403,
+            responseHttpStatus: 200,
+            responsePagePath: '/index.html',
+            ttl: cdk.Duration.seconds(10),
+          },
+          {
+            httpStatus: 404,
+            responseHttpStatus: 200,
+            responsePagePath: '/index.html',
+            ttl: cdk.Duration.seconds(10),
+          },
+        ],
+        minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+        certificate,
+        domainNames,
       });
 
-      new route53.ARecord(this, 'SiteAliasRecord', {
-        zone: hostedZone,
-        recordName: props.domainName,
-        target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(this.distribution)),
-      });
+      // 4. Route 53 DNS Alias Records (Optional)
+      if (props?.domainName && props?.hostedZoneId) {
+        // Extract root apex zone name from subdomain (e.g. aditya.weinventify.com -> weinventify.com)
+        const domainParts = props.domainName.split('.');
+        const apexZoneName = domainParts.slice(-2).join('.');
 
-      new route53.AaaaRecord(this, 'SiteAaaaAliasRecord', {
-        zone: hostedZone,
-        recordName: props.domainName,
-        target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(this.distribution)),
-      });
+        const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'SiteHostedZone', {
+          hostedZoneId: props.hostedZoneId,
+          zoneName: apexZoneName,
+        });
+
+        new route53.ARecord(this, 'SiteAliasRecord', {
+          zone: hostedZone,
+          recordName: props.domainName,
+          target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(this.distribution as cloudfront.Distribution)),
+        });
+
+        new route53.AaaaRecord(this, 'SiteAaaaAliasRecord', {
+          zone: hostedZone,
+          recordName: props.domainName,
+          target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(this.distribution as cloudfront.Distribution)),
+        });
+      }
     }
 
     // 5. Automated S3 Asset Deployment (if frontend production bundle is built)

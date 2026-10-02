@@ -74,7 +74,9 @@ export class App implements OnDestroy {
   // Form submission status
   protected readonly formStatus = signal<'idle' | 'sending' | 'success' | 'error'>('idle');
   protected readonly formErrorMessage = signal<string>('');
-  private readonly contactApiUrl = (typeof window !== 'undefined' && (window as any)?.__ENV?.CONTACT_API_URL) || '';
+  private readonly contactApiUrl =
+    (typeof window !== 'undefined' && (window as any)?.__ENV?.CONTACT_API_URL) ||
+    'https://f50b2igl9b.execute-api.ap-south-1.amazonaws.com/prod/contact';
   protected readonly formErrors = {
     name: signal(false),
     email: signal(false),
