@@ -11,7 +11,7 @@ const SENDER_EMAIL = process.env.SENDER_EMAIL || RECIPIENT_EMAIL;
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Api-Key',
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
   'Content-Type': 'application/json',
 };
 
@@ -28,6 +28,20 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       statusCode: 200,
       headers: CORS_HEADERS,
       body: JSON.stringify({ message: 'OK' }),
+    };
+  }
+
+  // Handle health check endpoint
+  const path = event.path || event.resource || '';
+  if (event.httpMethod === 'GET' && (path === '/health' || path === '/health/')) {
+    return {
+      statusCode: 200,
+      headers: CORS_HEADERS,
+      body: JSON.stringify({
+        status: 'ok',
+        service: 'portfolio-contact-service',
+        timestamp: new Date().toISOString(),
+      }),
     };
   }
 

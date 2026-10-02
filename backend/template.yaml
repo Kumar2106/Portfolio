@@ -35,9 +35,8 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref StageName
-      OpenApiVersion: '3.0.1'
       Cors:
-        AllowMethods: "'POST,OPTIONS'"
+        AllowMethods: "'GET,POST,OPTIONS'"
         AllowHeaders: "'Content-Type,Authorization,X-Api-Key'"
         AllowOrigin: "'*'"
 
@@ -56,6 +55,12 @@ Resources:
                 - ses:SendRawEmail
               Resource: '*'
       Events:
+        HealthGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ContactApi
+            Path: /health
+            Method: get
         ContactPost:
           Type: Api
           Properties:
@@ -73,6 +78,9 @@ Outputs:
   ContactApiEndpoint:
     Description: Public API Gateway endpoint URL for the contact form
     Value: !Sub "https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/contact"
+  HealthApiEndpoint:
+    Description: Public API Gateway health check endpoint URL
+    Value: !Sub "https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/health"
   ContactFunctionArn:
     Description: Lambda Function ARN
     Value: !GetAtt ContactFunction.Arn

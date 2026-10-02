@@ -145,7 +145,7 @@ jobs:
               SenderEmail="$SENDER_EMAIL" \
               StageName="$STAGE"
 
-      - name: Log Deployed API Endpoint
+      - name: Log Deployed API Endpoints
         env:
           AWS_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
         run: |
@@ -154,5 +154,12 @@ jobs:
             --region "$AWS_REGION" \
             --query "Stacks[0].Outputs[?OutputKey=='ContactApiEndpoint'].OutputValue" \
             --output text)
+          HEALTH_ENDPOINT=$(aws cloudformation describe-stacks \
+            --stack-name portfolio-contact-api \
+            --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='HealthApiEndpoint'].OutputValue" \
+            --output text)
           echo "::notice title=Contact API Endpoint::${API_ENDPOINT}"
+          echo "::notice title=Health API Endpoint::${HEALTH_ENDPOINT}"
           echo "Public Contact API Endpoint: ${API_ENDPOINT}"
+          echo "Public Health API Endpoint: ${HEALTH_ENDPOINT}"
