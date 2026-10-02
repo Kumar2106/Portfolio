@@ -6,28 +6,21 @@ import { PortfolioOidcStack } from '../lib/portfolio-oidc-stack';
 
 const app = new cdk.App();
 
-// Context values can be supplied via cdk.json or CLI flags:
-// -c domainName=aditya.weinventify.com -c certificateArn=arn:aws:acm:... -c hostedZoneId=Z...
+// Configuration values loaded from environment variables or cdk.json context
 const domainName =
-  app.node.tryGetContext('domainName') || process.env.DOMAIN_NAME || 'aditya.weinventify.com';
+  process.env.DOMAIN_NAME || app.node.tryGetContext('domainName');
 const certificateArn =
-  app.node.tryGetContext('certificateArn') || process.env.CERTIFICATE_ARN;
+  process.env.CERTIFICATE_ARN || app.node.tryGetContext('certificateArn');
 const hostedZoneId =
-  app.node.tryGetContext('hostedZoneId') || process.env.HOSTED_ZONE_ID;
+  process.env.HOSTED_ZONE_ID || app.node.tryGetContext('hostedZoneId');
 
 // Reusing existing live CloudFront distribution and S3 origin bucket
 const existingDistributionId =
-  app.node.tryGetContext('distributionId') ||
-  process.env.DISTRIBUTION_ID ||
-  'E2GV3YO0H8G1TK';
+  process.env.DISTRIBUTION_ID || app.node.tryGetContext('distributionId');
 const existingBucketName =
-  app.node.tryGetContext('bucketName') ||
-  process.env.BUCKET_NAME ||
-  'kumar-aditya-portfolio';
+  process.env.BUCKET_NAME || app.node.tryGetContext('bucketName');
 const existingDistributionDomainName =
-  app.node.tryGetContext('distributionDomainName') ||
-  process.env.DISTRIBUTION_DOMAIN_NAME ||
-  'd1up7aq7s8u9o9.cloudfront.net';
+  process.env.DISTRIBUTION_DOMAIN_NAME || app.node.tryGetContext('distributionDomainName');
 
 const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,

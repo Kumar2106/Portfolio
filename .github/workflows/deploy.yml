@@ -54,6 +54,13 @@ jobs:
           cd frontend
           CI=true npm run build
 
+      - name: Upload Built Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/portfolio-app/browser
+          retention-days: 1
+
       - name: Install & Build IaC
         run: |
           cd iac
@@ -75,15 +82,13 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: |
-            frontend/package-lock.json
-            iac/package-lock.json
+          cache-dependency-path: iac/package-lock.json
 
-      - name: Install Frontend Dependencies & Build
-        run: |
-          cd frontend
-          npm ci
-          CI=true npm run build
+      - name: Download Built Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/portfolio-app/browser
 
       - name: Install IaC Dependencies & Build
         run: |
@@ -98,6 +103,11 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
 
       - name: Deploy Infrastructure & Assets via CDK
+        env:
+          DISTRIBUTION_ID: ${{ vars.DISTRIBUTION_ID || 'E2GV3YO0H8G1TK' }}
+          BUCKET_NAME: ${{ vars.BUCKET_NAME || 'kumar-aditya-portfolio' }}
+          DISTRIBUTION_DOMAIN_NAME: ${{ vars.DISTRIBUTION_DOMAIN_NAME || 'd1up7aq7s8u9o9.cloudfront.net' }}
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME || 'aditya.weinventify.com' }}
         run: |
           cd iac
           npx cdk deploy PortfolioStack --require-approval never
