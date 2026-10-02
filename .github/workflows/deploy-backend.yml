@@ -147,7 +147,7 @@ jobs:
 
       - name: Log Deployed API Endpoint
         env:
-          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
         run: |
           API_ENDPOINT=$(aws cloudformation describe-stacks \
             --stack-name portfolio-contact-api \

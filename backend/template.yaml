@@ -35,17 +35,11 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref StageName
-      MergeDefinitions: true
+      OpenApiVersion: '3.0.1'
       Cors:
         AllowMethods: "'POST,OPTIONS'"
         AllowHeaders: "'Content-Type,Authorization,X-Api-Key'"
         AllowOrigin: "'*'"
-      DefinitionBody:
-        openapi: '3.0.1'
-        info:
-          title: 'Portfolio Contact Form API'
-          version: '1.0.0'
-        paths: {}
 
   ContactFunction:
     Type: AWS::Serverless::Function
