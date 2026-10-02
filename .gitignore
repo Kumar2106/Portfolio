@@ -20,3 +20,7 @@ cdk.out/
 .aws-sam/
 # Backups
 backups/
+
+# Local AI assistant instructions (contain account-specific details)
+GEMINI.md
+CLAUDE.local.md

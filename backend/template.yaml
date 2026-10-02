@@ -17,6 +17,10 @@ Parameters:
     Type: String
     Default: prod
     Description: API Gateway stage name.
+  AllowedOrigin:
+    Type: String
+    Default: https://aditya.weinventify.com
+    Description: Browser origin permitted to call the contact API (CORS).
 
 Globals:
   Function:
@@ -29,16 +33,23 @@ Globals:
       Variables:
         RECIPIENT_EMAIL: !Ref RecipientEmail
         SENDER_EMAIL: !Ref SenderEmail
+        ALLOWED_ORIGIN: !Ref AllowedOrigin
 
 Resources:
   ContactApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref StageName
+      # Throttle every method on the stage to stop the public endpoint being used to flood SES
+      MethodSettings:
+        - ResourcePath: '/*'
+          HttpMethod: '*'
+          ThrottlingRateLimit: 2
+          ThrottlingBurstLimit: 5
       Cors:
         AllowMethods: "'GET,POST,OPTIONS'"
-        AllowHeaders: "'Content-Type,Authorization,X-Api-Key'"
-        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type'"
+        AllowOrigin: !Sub "'${AllowedOrigin}'"
 
   ContactFunction:
     Type: AWS::Serverless::Function

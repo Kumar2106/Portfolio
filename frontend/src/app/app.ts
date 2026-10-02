@@ -273,11 +273,11 @@ export class App implements OnDestroy {
       { delay: 2600, progress: 50, log: '➔ [STAGE 3] Dockerize: docker build -t backend:latest .' },
       { delay: 3100, progress: 60, log: '  ✔ Step 1/4: FROM openjdk:21-slim' },
       { delay: 3500, progress: 68, log: '  ✔ Step 4/4: ENTRYPOINT ["java", "-jar", "app.jar"]' },
-      { delay: 4000, progress: 75, log: '➔ [STAGE 4] Push ECR: docker push 102432.dkr.ecr.aws-east-1...' },
+      { delay: 4000, progress: 75, log: '➔ [STAGE 4] Push ECR: docker push 123456789012.dkr.ecr.ap-south-1.amazonaws.com/backend:latest' },
       { delay: 4600, progress: 85, log: '  ✔ Image backend:latest pushed to AWS Elastic Container Registry.' },
       { delay: 5100, progress: 90, log: '➔ [STAGE 5] Deploy ECS: aws ecs update-service --cluster prod-cluster --service web' },
       { delay: 5700, progress: 95, log: '  ✔ Desired task count running. Rolling update finished.' },
-      { delay: 6300, progress: 100, log: '➔ Pipeline Run SUCCESSFUL. Deploy active at http://localhost:4200' }
+      { delay: 6300, progress: 100, log: '➔ Pipeline Run SUCCESSFUL. Service healthy behind the ALB (prod-cluster/web).' }
     ];
 
     logSteps.forEach((step, idx) => {
