@@ -334,6 +334,7 @@ export class PortfolioOidcStack extends cdk.Stack {
           ArnEquals: {
             'iam:PolicyARN': [
               'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+              'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole',
             ],
           },
         },

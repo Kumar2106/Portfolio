@@ -16,6 +16,13 @@
 - `backend/`: AWS SAM Node.js/TypeScript Lambda contact API dispatches via Amazon SES.
 - `iac/`: AWS CDK v2 (TypeScript) provisioning S3 bucket, CloudFront OAC distribution, and GitHub Actions OIDC provider/role.
 
+## Git Branching & PR Workflow
+- **Never commit directly to `main`**.
+- **Always create a new branch from `main`** for any changes, bugfixes, or features (e.g. `git checkout -b <type>/<name> origin/main`).
+- Work and test all changes on the dedicated branch.
+- Push the branch to GitHub and **open a Pull Request (PR)** targeting `main`.
+- Ensure all CI tests, lint checks, and automated AI reviews (CodeRabbit, PR-Agent) pass before merging.
+
 ## Development & Testing Workflows
 - **Frontend**: Build with `npm run build` in `frontend/` to produce static output at `frontend/dist/portfolio-app/browser`.
 - **Backend**: Run `npm test` and `sam validate --lint` in `backend/` before pushing Lambda changes.
