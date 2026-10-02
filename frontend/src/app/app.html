@@ -1074,6 +1074,7 @@
                 [ngModel]="contactForm.name()"
                 (ngModelChange)="contactForm.name.set($event)"
                 name="name"
+                maxlength="100"
                 class="form-control"
                 [class.error]="formErrors.name()"
                 placeholder="Alex Morgan">
@@ -1091,6 +1092,7 @@
                 [ngModel]="contactForm.email()"
                 (ngModelChange)="contactForm.email.set($event)"
                 name="email"
+                maxlength="254"
                 class="form-control"
                 [class.error]="formErrors.email()"
                 placeholder="alex@example.com">
@@ -1107,6 +1109,7 @@
                 [ngModel]="contactForm.message()"
                 (ngModelChange)="contactForm.message.set($event)"
                 name="message"
+                maxlength="5000"
                 class="form-control"
                 [class.error]="formErrors.message()"
                 placeholder="Hey Kumar, let's connect..."></textarea>

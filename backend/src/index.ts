@@ -7,10 +7,15 @@ const sesClient = new SESClient({
 
 const RECIPIENT_EMAIL = process.env.RECIPIENT_EMAIL || 'ka09934147002@gmail.com';
 const SENDER_EMAIL = process.env.SENDER_EMAIL || RECIPIENT_EMAIL;
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
+
+const MAX_NAME_LENGTH = 100;
+const MAX_EMAIL_LENGTH = 254;
+const MAX_MESSAGE_LENGTH = 5000;
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Api-Key',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+  'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
   'Content-Type': 'application/json',
 };
@@ -98,6 +103,20 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         statusCode: 400,
         headers: CORS_HEADERS,
         body: JSON.stringify({ error: 'Message is required' }),
+      };
+    }
+
+    if (
+      name.trim().length > MAX_NAME_LENGTH ||
+      email.trim().length > MAX_EMAIL_LENGTH ||
+      message.trim().length > MAX_MESSAGE_LENGTH
+    ) {
+      return {
+        statusCode: 400,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({
+          error: `Input too long. Limits: name ${MAX_NAME_LENGTH}, email ${MAX_EMAIL_LENGTH}, message ${MAX_MESSAGE_LENGTH} characters.`,
+        }),
       };
     }
 

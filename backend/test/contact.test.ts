@@ -129,6 +129,27 @@ describe('Contact Form Lambda Handler', () => {
     expect(JSON.parse(response.body).error).toBe('Message is required');
   });
 
+  it('should return 400 when message exceeds the length limit', async () => {
+    const event = createMockEvent({
+      body: JSON.stringify({ name: 'Alex', email: 'alex@example.com', message: 'a'.repeat(5001) }),
+    });
+    const response = await handler(event);
+
+    expect(response.statusCode).toBe(400);
+    expect(JSON.parse(response.body).error).toContain('Input too long');
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it('should return 400 when name exceeds the length limit', async () => {
+    const event = createMockEvent({
+      body: JSON.stringify({ name: 'a'.repeat(101), email: 'alex@example.com', message: 'Hello!' }),
+    });
+    const response = await handler(event);
+
+    expect(response.statusCode).toBe(400);
+    expect(JSON.parse(response.body).error).toContain('Input too long');
+  });
+
   it('should successfully send email and return 200 for valid input', async () => {
     const event = createMockEvent({
       body: JSON.stringify({

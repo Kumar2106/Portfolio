@@ -27,9 +27,13 @@ let existingBucketName: string | undefined;
 let existingDistributionDomainName: string | undefined;
 
 if (hasEnvOverride) {
-  if (!process.env.DISTRIBUTION_ID || !process.env.BUCKET_NAME) {
+  if (
+    !process.env.DISTRIBUTION_ID ||
+    !process.env.BUCKET_NAME ||
+    !process.env.DISTRIBUTION_DOMAIN_NAME
+  ) {
     throw new Error(
-      'When overriding hosting resources via environment variables, both DISTRIBUTION_ID and BUCKET_NAME must be specified together.'
+      'When overriding hosting resources via environment variables, DISTRIBUTION_ID, BUCKET_NAME and DISTRIBUTION_DOMAIN_NAME must be specified together.'
     );
   }
   existingDistributionId = process.env.DISTRIBUTION_ID;
@@ -48,6 +52,12 @@ if (
 ) {
   throw new Error(
     'Both distributionId and bucketName must be specified together to reuse existing infrastructure.'
+  );
+}
+
+if (existingDistributionId && !existingDistributionDomainName) {
+  throw new Error(
+    'distributionDomainName must be specified when reusing an existing distribution.'
   );
 }
 

@@ -147,11 +147,11 @@ npm test
 # Build TypeScript to dist/
 npm run build
 
-# Start local API Gateway simulation (http://localhost:3001)
-npm run local:api
-
 # Build SAM application
 sam build
+
+# Start local API Gateway simulation (http://localhost:3000)
+npm run sam:local
 
 # Deploy to AWS (guided or configured)
 sam deploy --guided
@@ -165,22 +165,25 @@ For more details, see the [Backend Documentation](backend/README.md).
 
 The portfolio services are deployed to AWS via GitHub Actions using **AWS OpenID Connect (OIDC)** authentication (zero long-lived credentials stored in GitHub), decoupled using path filtering:
 
+Each pipeline runs its test/validate job on pull requests to `main` that match its path filters; the deploy job runs only on pushes to `main` (or `workflow_dispatch`).
+
 ### 1. Frontend & Hosting Pipeline (`.github/workflows/deploy.yml`)
-- **Trigger**: Pushes to `main` modifying `frontend/**`, `iac/**`, or `.github/workflows/deploy.yml`.
+- **Trigger**: Changes to `frontend/**`, `iac/**`, or `.github/workflows/deploy.yml`.
 - **Process**:
-  1. Compiles the production Angular bundle (`frontend/dist/portfolio-app/browser`).
-  2. Assumes AWS IAM OIDC Role (`AWS_ROLE_ARN`).
-  3. Synchronizes static assets to the private S3 bucket with `--delete`.
-  4. Triggers CloudFront CDN cache invalidation (`/*`) for immediate worldwide propagation.
+  1. Runs the Angular unit tests and compiles the production bundle (`frontend/dist/portfolio-app/browser`), shared with the deploy job as a build artifact.
+  2. Builds the CDK app and runs `cdk synth`.
+  3. Assumes the frontend OIDC role (`AWS_FRONTEND_ROLE_ARN`).
+  4. Runs `cdk deploy PortfolioStack`, whose `BucketDeployment` uploads the assets to the private S3 bucket and invalidates the CloudFront cache (`/*`).
 
 ### 2. Backend Serverless API Pipeline (`.github/workflows/deploy-backend.yml`)
-- **Trigger**: Pushes to `main` modifying `backend/**` or `.github/workflows/deploy-backend.yml` (or via `workflow_dispatch`).
+- **Trigger**: Changes to `backend/**` or `.github/workflows/deploy-backend.yml` (or `workflow_dispatch` with a stage input).
 - **Process**:
-  1. Runs Vitest unit tests (100% passing) and compiles TypeScript.
-  2. Validates SAM template with `sam validate --lint`.
-  3. Builds SAM package via `sam build`.
-  4. Assumes AWS IAM OIDC Role (`AWS_ROLE_ARN`) and runs `sam deploy --resolve-s3`.
-  5. Exports public API Gateway endpoint for contact form submissions.
+  1. Runs the Vitest unit tests and compiles TypeScript.
+  2. Validates the SAM template with `sam validate --lint` and runs `sam build`.
+  3. Assumes the backend OIDC role (`AWS_BACKEND_ROLE_ARN`) and runs `sam deploy --resolve-s3`.
+  4. Prints the public contact and health endpoints as workflow notices.
+
+The default region for both pipelines is `ap-south-1` (override with the `AWS_REGION` secret).
 
 For complete setup instructions, see the [AWS Deployment Guide](deployment_guide.md).
 

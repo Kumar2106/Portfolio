@@ -89,11 +89,11 @@ Once deployment completes, the CDK outputs the:
 - `DistributionDomainName`: The CloudFront distribution URL (e.g. `d123456abcdef8.cloudfront.net`).
 - `SiteUrl`: The live website URL.
 
-Compiled production assets will be output to:
-`frontend/dist/portfolio-app/browser/`
+> [!NOTE]
+> To deploy into an already-running bucket and distribution instead of creating new ones, pass `-c distributionId=...`, `-c bucketName=...` and `-c distributionDomainName=...` together (or set `DISTRIBUTION_ID`, `BUCKET_NAME` and `DISTRIBUTION_DOMAIN_NAME`). The stack then imports those resources and uploads assets without pruning existing objects.
 
-> [!IMPORTANT]
-> Upload only the contents of the `browser/` directory (`index.html`, `main-*.js`, `styles-*.css`, `favicon.png`).
+> [!WARNING]
+> Imported resources are not reconfigured by CDK, so they do not inherit the secure defaults applied to newly created ones. Before using reuse mode, confirm the existing bucket has all four S3 Block Public Access settings enabled and a bucket policy that denies non-TLS requests (`aws:SecureTransport`), and that the existing distribution uses Origin Access Control, redirects HTTP to HTTPS, and enforces TLS 1.2 or newer (`TLSv1.2_2021`).
 
 ---
 
@@ -109,11 +109,16 @@ If you have the AWS CLI configured locally (`aws configure`), you can build the 
 
 ## Part 4: Automated CI/CD Pipeline with GitHub Actions (OIDC)
 
-Deployments are automated through **GitHub Actions** using **AWS OpenID Connect (OIDC)** authentication (zero long-lived credentials stored in GitHub).
+Deployments are automated through **GitHub Actions** using **AWS OpenID Connect (OIDC)** authentication (zero long-lived credentials stored in GitHub). Frontend and backend deploy with **separate, least-privilege IAM roles**.
 
-### Step 1: Provision OIDC Provider & Role via AWS CDK (Recommended)
+### Step 1: Provision the OIDC Provider & Deploy Roles via AWS CDK
 
-You can provision the entire GitHub OIDC Identity Provider and the IAM Deployment Role in a single command using `PortfolioOidcStack`:
+`PortfolioOidcStack` creates the GitHub OIDC identity provider and two roles that only workflows running on `main` of this repository can assume:
+
+| Role | Used by | Scope |
+| --- | --- | --- |
+| `GitHubActionsPortfolioFrontendDeployRole` | `deploy.yml` | CDK bootstrap roles, `Portfolio*` CloudFormation stacks, portfolio S3 bucket, CloudFront invalidation |
+| `GitHubActionsPortfolioBackendDeployRole` | `deploy-backend.yml` | `portfolio-*` SAM/CloudFormation stacks, SAM packaging bucket, Lambda, API Gateway, Lambda execution roles |
 
 ```bash
 cd iac
@@ -123,124 +128,28 @@ npx cdk deploy PortfolioOidcStack
 npx cdk deploy PortfolioOidcStack -c existingOidcProvider=true
 ```
 
-This will output the `RoleArn` (e.g. `arn:aws:iam::ACCOUNT_ID:role/GitHubActionsPortfolioDeployRole`), which you copy directly to your GitHub repository secrets.
+The exact IAM policies live in [`iac/lib/portfolio-oidc-stack.ts`](iac/lib/portfolio-oidc-stack.ts), which is the single source of truth.
 
----
+### Step 2: Configure GitHub Secrets & Variables
 
-### Step 2: (Alternative) Manual AWS Console Setup
+Add these in GitHub (`Settings` -> `Secrets and variables` -> `Actions`).
 
-If you prefer setting up OIDC manually in the AWS Console:
+**Secrets**
+- `AWS_FRONTEND_ROLE_ARN`: the `FrontendRoleArn` stack output
+- `AWS_BACKEND_ROLE_ARN`: the `BackendRoleArn` stack output
+- `AWS_REGION` (optional): defaults to `ap-south-1`
+- `CERTIFICATE_ARN`, `HOSTED_ZONE_ID` (optional): custom domain with a newly created distribution
+- `CONTACT_RECIPIENT_EMAIL`, `CONTACT_SENDER_EMAIL` (optional): contact API email addresses
 
-1. **Create Identity Provider**:
-   - Open **AWS IAM Console** -> **Identity Providers** -> **Add provider**.
-   - Provider URL: `https://token.actions.githubusercontent.com`. Audience: `sts.amazonaws.com`.
-2. **Create IAM Role**:
-   - Create a role with the following trust policy (replace `ACCOUNT_ID`):
+**Variables** (optional; override the `cdk.json` context defaults)
+- `DOMAIN_NAME`: custom domain, e.g. `aditya.weinventify.com`
+- `DISTRIBUTION_ID`, `BUCKET_NAME`, `DISTRIBUTION_DOMAIN_NAME`: existing hosting resources to deploy into (all three must be set together)
 
-   ```json
-   {
-     "Version": "2012-10-17",
-     "Statement": [
-       {
-         "Effect": "Allow",
-         "Principal": {
-           "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
-         },
-         "Action": "sts:AssumeRoleWithWebIdentity",
-         "Condition": {
-           "StringEquals": {
-             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-             "token.actions.githubusercontent.com:sub": "repo:Kumar2106/Portfolio:ref:refs/heads/main"
-           }
-         }
-       }
-     ]
-   }
-   ```
+### Step 3: Automatic Deployment
 
-### Step 3: Attach IAM Permissions Policy
+On pull requests to `main` that touch `frontend/**`, `iac/**` or the workflow file, `.github/workflows/deploy.yml` runs the frontend tests, builds the bundle, and synthesizes the CDK app. On push to `main` (or `workflow_dispatch`) it then:
+1. Downloads the built frontend artifact.
+2. Authenticates to AWS with the frontend OIDC role.
+3. Runs `npx cdk deploy PortfolioStack --require-approval never`, which uploads the assets to S3 and invalidates the CloudFront cache.
 
-Attach a policy allowing CDK deployment (bootstrap role assumption, SSM lookups, CloudFormation status) alongside S3 asset synchronization and CloudFront cache invalidation:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "CDKBootstrapRoleAssumption",
-      "Effect": "Allow",
-      "Action": "sts:AssumeRole",
-      "Resource": [
-        "arn:aws:iam::ACCOUNT_ID:role/cdk-*-deploy-role-ACCOUNT_ID-*",
-        "arn:aws:iam::ACCOUNT_ID:role/cdk-*-file-publishing-role-ACCOUNT_ID-*",
-        "arn:aws:iam::ACCOUNT_ID:role/cdk-*-lookup-role-ACCOUNT_ID-*"
-      ]
-    },
-    {
-      "Sid": "SSMBootstrapLookup",
-      "Effect": "Allow",
-      "Action": [
-        "ssm:GetParameter",
-        "ssm:GetParameters"
-      ],
-      "Resource": "arn:aws:ssm:*:ACCOUNT_ID:parameter/cdk-bootstrap/*"
-    },
-    {
-      "Sid": "CloudFormationDeployStatus",
-      "Effect": "Allow",
-      "Action": [
-        "cloudformation:DescribeStacks",
-        "cloudformation:GetTemplate",
-        "cloudformation:DescribeStackEvents",
-        "cloudformation:DescribeStackResources"
-      ],
-      "Resource": "arn:aws:cloudformation:*:ACCOUNT_ID:stack/Portfolio*/*"
-    },
-    {
-      "Sid": "S3AssetDeployment",
-      "Effect": "Allow",
-      "Action": [
-        "s3:PutObject",
-        "s3:GetObject",
-        "s3:ListBucket",
-        "s3:DeleteObject",
-        "s3:GetBucketLocation"
-      ],
-      "Resource": [
-        "arn:aws:s3:::cdk-*-assets-ACCOUNT_ID-*",
-        "arn:aws:s3:::cdk-*-assets-ACCOUNT_ID-*/*",
-        "arn:aws:s3:::*portfolio*",
-        "arn:aws:s3:::*portfolio*/*"
-      ]
-    },
-    {
-      "Sid": "CloudFrontInvalidation",
-      "Effect": "Allow",
-      "Action": [
-        "cloudfront:CreateInvalidation",
-        "cloudfront:GetInvalidation"
-      ],
-      "Resource": "arn:aws:cloudfront::ACCOUNT_ID:distribution/*"
-    }
-  ]
-}
-```
-
-### Step 4: Configure GitHub Secrets
-
-Add these repository secrets in GitHub (`Settings` -> `Secrets and variables` -> `Actions`):
-- `AWS_ROLE_ARN`: IAM Role ARN (e.g. `arn:aws:iam::ACCOUNT_ID:role/GitHubActionsPortfolioDeployRole`)
-- `AWS_REGION`: AWS Region (e.g. `us-east-1`)
-
-Optional (for custom domain deployment):
-- `DOMAIN_NAME`: `aditya.weinventify.com`
-- `CERTIFICATE_ARN`: `arn:aws:acm:us-east-1:...:certificate/...`
-- `HOSTED_ZONE_ID`: `Z...`
-
-### Step 5: Automatic Deployment via AWS CDK
-
-Every time code is pushed or merged to `main` (or triggered manually via `workflow_dispatch`), `.github/workflows/deploy.yml` automatically:
-1. Installs dependencies and compiles the Angular production bundle in `frontend/`.
-2. Installs CDK dependencies and builds TypeScript in `iac/`.
-3. Authenticates keylessly to AWS using OIDC.
-4. Executes `npx cdk deploy --require-approval never`, which manages the S3 bucket, CloudFront distribution with OAC, synchronizes the frontend assets, and invalidates the CloudFront cache globally.
+The backend follows the same pattern in `.github/workflows/deploy-backend.yml` — see the [Backend Documentation](backend/README.md).

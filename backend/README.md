@@ -17,8 +17,8 @@ graph LR
 ```
 
 ### Key Highlights
-- **Input Validation**: Sanitizes name and message; validates email syntax.
-- **CORS Support**: Pre-configured headers for browser origins (`POST, OPTIONS`).
+- **Input Validation**: Requires name, email, and message; validates email syntax; enforces length limits (name 100, email 254, message 5000 characters); strips line breaks from header fields.
+- **Abuse Protection**: a stage-wide API Gateway throttle (2 req/s, burst 5, shared by all callers) caps SES volume and cost, and CORS is restricted to the portfolio origin (`AllowedOrigin` parameter). Per-client limiting would require an AWS WAF rate-based rule.
 - **Amazon SES**: Dual HTML and plain-text email delivery with `Reply-To` automatically set to the sender's email.
 - **ARM64 Architecture**: Low-latency, cost-efficient execution on AWS Graviton.
 
@@ -52,9 +52,11 @@ npm test
 
 ### Local Testing with SAM CLI
 
-Start the local API Gateway emulator:
+Build and start the local API Gateway emulator:
 ```bash
-sam local start-api --port 3000
+npm run build
+sam build
+npm run sam:local   # sam local start-api --port 3000
 ```
 
 Send a test request:
@@ -92,17 +94,18 @@ sam deploy
 The backend has a dedicated deployment pipeline (`.github/workflows/deploy-backend.yml`) that automatically builds, tests, validates, and deploys changes on push to `main`:
 - **Trigger**: Changes in `backend/**` or `.github/workflows/deploy-backend.yml` (path-filtered to run independently from the frontend).
 - **Validation**: Runs Vitest unit tests, compiles TypeScript, and validates the SAM template (`sam validate --lint`).
-- **OIDC Deployment**: Uses keyless GitHub Actions OIDC (`AWS_ROLE_ARN`) to assume the deployment role, build the SAM package, and execute `sam deploy`.
+- **OIDC Deployment**: Uses keyless GitHub Actions OIDC (`AWS_BACKEND_ROLE_ARN`) to assume the deployment role, build the SAM package, and execute `sam deploy`.
 - **Manual Trigger**: Can be manually triggered via `workflow_dispatch` with custom stage inputs.
 
 #### Required GitHub Secrets & Variables
-- `AWS_ROLE_ARN`: IAM Role ARN for OIDC authentication (`GitHubActionsPortfolioDeployRole`).
-- `AWS_REGION`: Target AWS region (defaults to `us-east-1`).
+- `AWS_BACKEND_ROLE_ARN`: IAM Role ARN for OIDC authentication (`GitHubActionsPortfolioBackendDeployRole`, output `BackendRoleArn` of `PortfolioOidcStack`).
+- `AWS_REGION`: Target AWS region (defaults to `ap-south-1`).
 - `CONTACT_RECIPIENT_EMAIL`: (Optional) Recipient email address (defaults to `ka09934147002@gmail.com`).
 - `CONTACT_SENDER_EMAIL`: (Optional) Verified SES sender email address (defaults to `ka09934147002@gmail.com`).
 
 #### CloudFormation Outputs
 Upon successful deployment, SAM outputs:
-- `ContactApiEndpoint`: The public URL (e.g. `https://abc123xyz.execute-api.us-east-1.amazonaws.com/prod/contact`).
+- `ContactApiEndpoint`: The public URL (e.g. `https://abc123xyz.execute-api.ap-south-1.amazonaws.com/prod/contact`).
+- `HealthApiEndpoint`: The `GET /health` URL.
 - `ContactFunctionArn`: The Lambda function ARN.
 - `ContactFunctionIamRole`: The IAM role generated for the contact Lambda.

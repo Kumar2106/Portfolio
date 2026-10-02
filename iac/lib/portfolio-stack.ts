@@ -23,7 +23,7 @@ export interface PortfolioStackProps extends cdk.StackProps {
   readonly existingBucketName?: string;
   /** Optional existing CloudFront distribution ID to reuse (e.g. E2GV3YO0H8G1TK) */
   readonly existingDistributionId?: string;
-  /** Optional existing CloudFront distribution domain name (e.g. d1up7aq7s8u9o9.cloudfront.net) */
+  /** Existing CloudFront distribution domain name; required with existingDistributionId (e.g. d111111abcdef8.cloudfront.net) */
   readonly existingDistributionDomainName?: string;
 }
 
@@ -35,6 +35,10 @@ export class PortfolioStack extends cdk.Stack {
     super(scope, id, props);
 
     if (props?.existingBucketName && props?.existingDistributionId) {
+      if (!props.existingDistributionDomainName) {
+        throw new Error('existingDistributionDomainName is required when reusing an existing distribution');
+      }
+
       // 1. Reuse existing live S3 bucket and CloudFront distribution
       this.bucket = s3.Bucket.fromBucketName(
         this,
@@ -47,9 +51,7 @@ export class PortfolioStack extends cdk.Stack {
         'PortfolioDistribution',
         {
           distributionId: props.existingDistributionId,
-          domainName:
-            props.existingDistributionDomainName ||
-            'd1up7aq7s8u9o9.cloudfront.net',
+          domainName: props.existingDistributionDomainName,
         }
       );
     } else {
