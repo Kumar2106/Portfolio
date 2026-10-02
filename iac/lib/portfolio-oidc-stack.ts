@@ -333,8 +333,8 @@ export class PortfolioOidcStack extends cdk.Stack {
         conditions: {
           ArnEquals: {
             'iam:PolicyARN': [
-              'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-              'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole',
+              iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole').managedPolicyArn,
+              iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole').managedPolicyArn,
             ],
           },
         },
