@@ -48,14 +48,29 @@ describe('Contact Form Lambda Handler', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.headers?.['Access-Control-Allow-Origin']).toBe('*');
+    expect(response.headers?.['Access-Control-Allow-Methods']).toContain('GET');
     expect(response.headers?.['Access-Control-Allow-Methods']).toContain('POST');
   });
 
-  it('should reject non-POST and non-OPTIONS methods with 405', async () => {
-    const event = createMockEvent({ httpMethod: 'GET' });
+  it('should return 200 and healthy status for GET /health', async () => {
+    const event = createMockEvent({ httpMethod: 'GET', path: '/health' });
+    const response = await handler(event);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers?.['Access-Control-Allow-Origin']).toBe('*');
+    const body = JSON.parse(response.body);
+    expect(body.status).toBe('ok');
+    expect(body.service).toBe('portfolio-contact-service');
+    expect(body.timestamp).toBeDefined();
+  });
+
+  it('should reject GET on non-health paths with 405', async () => {
+    const event = createMockEvent({ httpMethod: 'GET', path: '/contact' });
     const response = await handler(event);
 
     expect(response.statusCode).toBe(405);
+    const body = JSON.parse(response.body);
+    expect(body.error).toContain('Method Not Allowed');
   });
 
   it('should return 400 when body is empty', async () => {
