@@ -117,7 +117,9 @@ jobs:
           npx cdk deploy PortfolioStack --require-approval never
 
       - name: Log Deployed Website URL
+        env:
+          DEPLOYED_DOMAIN: ${{ vars.DOMAIN_NAME || 'aditya.weinventify.com' }}
         run: |
-          DEPLOYED_DOMAIN="${{ vars.DOMAIN_NAME || 'aditya.weinventify.com' }}"
+          [[ "$DEPLOYED_DOMAIN" =~ ^[A-Za-z0-9.-]+$ ]] || exit 1
           echo "::notice title=Live Website URL::https://${DEPLOYED_DOMAIN}"
           echo "Public Website URL: https://${DEPLOYED_DOMAIN}"
