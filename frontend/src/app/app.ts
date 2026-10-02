@@ -371,6 +371,9 @@ export class App implements OnDestroy {
           this.contactForm.name.set('');
           this.contactForm.email.set('');
           this.contactForm.message.set('');
+        } else if (response.status === 429) {
+          this.formErrorMessage.set('Too many messages are being sent right now. Please wait a few seconds and try again.');
+          this.formStatus.set('error');
         } else {
           const data = await response.json().catch(() => ({}));
           this.formErrorMessage.set(data?.error || 'Failed to deliver message. Please try again.');

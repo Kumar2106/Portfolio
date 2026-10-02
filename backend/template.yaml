@@ -11,8 +11,8 @@ Parameters:
     Description: Destination email address where contact messages are delivered.
   SenderEmail:
     Type: String
-    Default: ka09934147002@gmail.com
-    Description: Verified SES sender email address.
+    Default: no-reply@aditya.weinventify.com
+    Description: SES sender address on a verified domain identity (DKIM-signed, no mailbox required).
   StageName:
     Type: String
     Default: prod
@@ -47,6 +47,18 @@ Resources:
           HttpMethod: '*'
           ThrottlingRateLimit: 2
           ThrottlingBurstLimit: 5
+        # Each POST sends one email: keep it within the SES sandbox send rate (1/sec). CORS preflight
+        # (OPTIONS) stays on the looser default above so it never consumes the POST allowance.
+        - ResourcePath: '/~1contact'
+          HttpMethod: POST
+          ThrottlingRateLimit: 1
+          ThrottlingBurstLimit: 1
+      # API Gateway's own errors (e.g. 429 from throttling) carry CORS headers so the browser can read them
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${AllowedOrigin}'"
       Cors:
         AllowMethods: "'GET,POST,OPTIONS'"
         AllowHeaders: "'Content-Type'"
@@ -60,15 +72,21 @@ Resources:
       Description: Validates contact form submissions and delivers emails via Amazon SES.
       Policies:
         - Statement:
-            # Scoped to the configured identities only. SES authorizes against the sender identity, and in the
-            # sandbox also against the recipient identity, so both are listed.
+            # SES authorizes SendEmail against the sender identity and, while in the sandbox, also against each
+            # recipient identity. Allowing this account's identities but pinning ses:FromAddress lets the function
+            # send only as SenderEmail, in the sandbox and after production access alike.
             - Sid: SESSendEmailAccess
               Effect: Allow
               Action:
                 - ses:SendEmail
-              Resource:
-                - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderEmail}'
-                - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${RecipientEmail}'
+              Resource: !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
+              # Matches the bare address or any display name around it ("Name <address>"), so the policy holds
+              # whichever form SES evaluates; the sending address itself stays pinned to SenderEmail.
+              Condition:
+                StringLike:
+                  ses:FromAddress:
+                    - !Ref SenderEmail
+                    - !Sub '*<${SenderEmail}>'
       Events:
         HealthGet:
           Type: Api
