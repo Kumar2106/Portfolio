@@ -80,9 +80,13 @@ Resources:
               Action:
                 - ses:SendEmail
               Resource: !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
+              # Matches the bare address or any display name around it ("Name <address>"), so the policy holds
+              # whichever form SES evaluates; the sending address itself stays pinned to SenderEmail.
               Condition:
-                StringEquals:
-                  ses:FromAddress: !Ref SenderEmail
+                StringLike:
+                  ses:FromAddress:
+                    - !Ref SenderEmail
+                    - !Sub '*<${SenderEmail}>'
       Events:
         HealthGet:
           Type: Api
