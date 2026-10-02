@@ -68,7 +68,7 @@ Portfolio/
 ## 🚀 Getting Started
 
 ### Prerequisites
-* Node.js `^20.0.0` or `^22.0.0`
+* Node.js `^22.22.3` or `^24.15.0` (required by Angular 22)
 * npm `^10.0.0` or higher
 * AWS CLI configured (`aws configure` or SSO)
 

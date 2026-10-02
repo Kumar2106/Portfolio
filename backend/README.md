@@ -27,7 +27,7 @@ graph LR
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js `^20.0.0` or `^22.0.0`
+- Node.js `^22.12.0` or `^24.0.0` (required by Vitest 5)
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 - AWS CLI configured with active credentials (`aws sts get-caller-identity`)
 
