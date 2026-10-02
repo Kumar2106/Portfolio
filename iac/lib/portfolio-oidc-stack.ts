@@ -235,14 +235,27 @@ export class PortfolioOidcStack extends cdk.Stack {
       })
     );
 
-    // S3 SAM packaging bucket management
+    // S3 SAM packaging bucket creation and cleanup
+    this.backendDeployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'SAMManagedS3BucketLifecycle',
+        effect: iam.Effect.ALLOW,
+        actions: [
+          's3:CreateBucket',
+          's3:DeleteBucket',
+        ],
+        resources: [
+          'arn:aws:s3:::aws-sam-cli-managed-*',
+        ],
+      })
+    );
+
+    // S3 SAM packaging bucket management (scoped strictly to own AWS account)
     this.backendDeployRole.addToPolicy(
       new iam.PolicyStatement({
         sid: 'SAMManagedS3Packaging',
         effect: iam.Effect.ALLOW,
         actions: [
-          's3:CreateBucket',
-          's3:DeleteBucket',
           's3:GetBucketLocation',
           's3:GetObject',
           's3:PutObject',
@@ -265,6 +278,11 @@ export class PortfolioOidcStack extends cdk.Stack {
           `arn:aws:s3:::*portfolio*`,
           `arn:aws:s3:::*portfolio*/*`,
         ],
+        conditions: {
+          StringEquals: {
+            'aws:ResourceAccount': this.account,
+          },
+        },
       })
     );
 
