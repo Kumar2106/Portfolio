@@ -147,7 +147,7 @@ export class PortfolioStack extends cdk.Stack {
         destinationBucket: this.bucket,
         distribution: this.distribution,
         distributionPaths: ['/*'],
-        prune: true,
+        prune: !props?.existingBucketName,
       });
     }
 

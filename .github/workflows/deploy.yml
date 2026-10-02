@@ -17,9 +17,8 @@ on:
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
-# Permissions required to request JWT/OIDC token from GitHub OIDC provider
+# Default repository permissions (read-only)
 permissions:
-  id-token: write
   contents: read
 
 jobs:
@@ -73,6 +72,9 @@ jobs:
     needs: test-and-build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

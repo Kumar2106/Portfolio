@@ -22,6 +22,15 @@ const existingBucketName =
 const existingDistributionDomainName =
   process.env.DISTRIBUTION_DOMAIN_NAME || app.node.tryGetContext('distributionDomainName');
 
+if (
+  (existingDistributionId && !existingBucketName) ||
+  (!existingDistributionId && existingBucketName)
+) {
+  throw new Error(
+    'Both distributionId and bucketName must be specified together to reuse existing infrastructure.'
+  );
+}
+
 const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
   region: process.env.CDK_DEFAULT_REGION || 'ap-south-1',
