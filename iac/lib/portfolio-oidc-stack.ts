@@ -140,7 +140,17 @@ export class PortfolioOidcStack extends cdk.Stack {
       })
     );
 
-    // S3 asset deployment and bucket sync
+    // S3 bucket creation (kept separate: aws:ResourceAccount cannot be relied on before the bucket exists)
+    this.frontendDeployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'S3FrontendBucketCreation',
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:CreateBucket'],
+        resources: [`arn:aws:s3:::*portfolio*`],
+      })
+    );
+
+    // S3 asset deployment and bucket sync (scoped strictly to own AWS account)
     this.frontendDeployRole.addToPolicy(
       new iam.PolicyStatement({
         sid: 'S3FrontendAssetDeployment',
@@ -151,7 +161,6 @@ export class PortfolioOidcStack extends cdk.Stack {
           's3:ListBucket',
           's3:DeleteObject',
           's3:GetBucketLocation',
-          's3:CreateBucket',
           's3:PutBucketVersioning',
           's3:PutEncryptionConfiguration',
           's3:PutBucketPolicy',
@@ -163,6 +172,11 @@ export class PortfolioOidcStack extends cdk.Stack {
           `arn:aws:s3:::*portfolio*`,
           `arn:aws:s3:::*portfolio*/*`,
         ],
+        conditions: {
+          StringEquals: {
+            'aws:ResourceAccount': this.account,
+          },
+        },
       })
     );
 

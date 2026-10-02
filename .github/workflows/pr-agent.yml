@@ -8,8 +8,16 @@ on:
 
 jobs:
   pr_agent:
-    # Avoid running on bot comments to prevent loops; for comments, only run if it contains a slash command
-    if: ${{ github.event.sender.type != 'Bot' && (github.event_name == 'pull_request' || contains(github.event.comment.body, '/')) }}
+    # Skip bot events to prevent loops. PR events run as usual (fork PRs get no secrets). Comment-triggered
+    # runs are limited to slash commands on PRs from the repo owner or collaborators, so strangers on this
+    # public repo cannot spend the Gemini API quota.
+    if: >-
+      ${{ github.event.sender.type != 'Bot' && (
+        github.event_name == 'pull_request' ||
+        (github.event.issue.pull_request &&
+         startsWith(github.event.comment.body, '/') &&
+         contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association))
+      ) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -18,7 +26,8 @@ jobs:
 
     steps:
       - name: Run PR Agent
-        uses: the-pr-agent/pr-agent@main
+        # Pinned to the v0.46.0 release commit; a mutable branch ref would get the Gemini key on every upstream push
+        uses: the-pr-agent/pr-agent@1d01f24f455bb879c1d9c557ad7de3d72dcc7975 # v0.46.0
         env:
           # GitHub Token provided automatically by Actions for commenting
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
