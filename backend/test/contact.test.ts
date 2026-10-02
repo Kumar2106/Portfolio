@@ -153,6 +153,45 @@ describe('Contact Form Lambda Handler', () => {
     expect(JSON.parse(response.body).error).toContain('Input too long');
   });
 
+  it('should reject a crafted ReDoS email payload quickly without sending', async () => {
+    // Shape reported by CodeQL js/polynomial-redos: '!@!.' followed by many '!.' repetitions
+    const crafted = '!@!.' + '!.'.repeat(50_000) + ' ';
+    const event = createMockEvent({
+      body: JSON.stringify({ name: 'Alex', email: crafted, message: 'Hello!' }),
+    });
+
+    const start = performance.now();
+    const response = await handler(event);
+    const elapsed = performance.now() - start;
+
+    expect(response.statusCode).toBe(400);
+    expect(elapsed).toBeLessThan(100);
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it('should reject emails with empty domain labels', async () => {
+    for (const email of ['alex@example..com', 'alex@.example.com', 'alex@example.com.', 'alex@example']) {
+      const event = createMockEvent({
+        body: JSON.stringify({ name: 'Alex', email, message: 'Hello!' }),
+      });
+      const response = await handler(event);
+
+      expect(response.statusCode, email).toBe(400);
+      expect(JSON.parse(response.body).error).toBe('A valid email address is required');
+    }
+  });
+
+  it('should accept common valid email formats', async () => {
+    for (const email of ['alex@example.com', 'alex.morgan+portfolio@mail.example.co.in', 'a_b-c@sub-domain.example.io']) {
+      const event = createMockEvent({
+        body: JSON.stringify({ name: 'Alex', email, message: 'Hello!' }),
+      });
+      const response = await handler(event);
+
+      expect(response.statusCode, email).toBe(200);
+    }
+  });
+
   it('should successfully send email and return 200 for valid input', async () => {
     const event = createMockEvent({
       body: JSON.stringify({

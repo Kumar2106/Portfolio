@@ -13,6 +13,10 @@ const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 254;
 const MAX_MESSAGE_LENGTH = 5000;
 
+// Domain labels exclude '.', so every '.' has exactly one place to match and the regex can't backtrack
+// polynomially on crafted input (CodeQL js/polynomial-redos). Length is still checked first.
+const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -89,8 +93,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || typeof email !== 'string' || !emailRegex.test(email.trim())) {
+    if (!email || typeof email !== 'string' || !email.trim()) {
       return {
         statusCode: 400,
         headers: CORS_HEADERS,
@@ -117,6 +120,15 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         body: JSON.stringify({
           error: `Input too long. Limits: name ${MAX_NAME_LENGTH}, email ${MAX_EMAIL_LENGTH}, message ${MAX_MESSAGE_LENGTH} characters.`,
         }),
+      };
+    }
+
+    // Format check runs only after the length cap, so the regex never sees unbounded input
+    if (!EMAIL_REGEX.test(email.trim())) {
+      return {
+        statusCode: 400,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ error: 'A valid email address is required' }),
       };
     }
 
