@@ -11,8 +11,8 @@ Parameters:
     Description: Destination email address where contact messages are delivered.
   SenderEmail:
     Type: String
-    Default: ka09934147002@gmail.com
-    Description: Verified SES sender email address.
+    Default: no-reply@aditya.weinventify.com
+    Description: SES sender address on a verified domain identity (DKIM-signed, no mailbox required).
   StageName:
     Type: String
     Default: prod
@@ -60,14 +60,17 @@ Resources:
       Description: Validates contact form submissions and delivers emails via Amazon SES.
       Policies:
         - Statement:
-            # Scoped to the configured identities only. SES authorizes against the sender identity, and in the
-            # sandbox also against the recipient identity, so both are listed.
+            # Scoped to the configured identities only. SES authorizes against the sender identity (the address,
+            # or its verified domain), and in the sandbox also against the recipient identity, so all are listed.
             - Sid: SESSendEmailAccess
               Effect: Allow
               Action:
                 - ses:SendEmail
               Resource:
                 - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderEmail}'
+                - !Sub
+                  - 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderDomain}'
+                  - SenderDomain: !Select [1, !Split ['@', !Ref SenderEmail]]
                 - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${RecipientEmail}'
       Events:
         HealthGet:

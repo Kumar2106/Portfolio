@@ -12,7 +12,7 @@ It exposes a RESTful API via **Amazon API Gateway** backed by an **AWS Lambda fu
 graph LR
     Client[Portfolio Frontend] -- POST /contact --> APIGW[API Gateway (HTTP/REST)]
     APIGW -- Event Payload --> Lambda[AWS Lambda (Node.js 22)]
-    Lambda -- SendEmailCommand --> SES[Amazon SES]
+    Lambda -- SendEmailCommand --> SES[Amazon SES<br/>no-reply@aditya.weinventify.com]
     SES -- Delivery --> Inbox[ka09934147002@gmail.com]
 ```
 
@@ -75,11 +75,19 @@ curl -X POST http://localhost:3000/contact \
 
 ### Deployment to AWS
 
-#### 1. Verify SES Email Identity (One-Time Setup)
-Amazon SES requires the sender (and recipient in sandbox mode) to be verified:
+#### 1. Verify SES Identities (One-Time Setup)
+Mail is sent from `no-reply@aditya.weinventify.com`, an address on a verified **domain identity**. It's DKIM-signed so it passes DMARC at the recipient, and it needs no mailbox because nothing is ever delivered to it. Visitor replies go to the visitor via `Reply-To`.
+
 ```bash
-aws ses verify-email-identity --email-address ka09934147002@gmail.com
+# Domain identity with Easy DKIM; add the three returned tokens as CNAMEs
+# <token>._domainkey.aditya.weinventify.com -> <token>.dkim.amazonses.com in Route 53
+aws sesv2 create-email-identity --email-identity aditya.weinventify.com --region ap-south-1
+
+# While the account is in the SES sandbox, the recipient must also be verified (click the emailed link)
+aws ses verify-email-identity --email-address ka09934147002@gmail.com --region ap-south-1
 ```
+
+The sandbox limits sending to verified recipients (200 emails/day, 1/sec). That's enough here because every message goes to the one verified inbox, so SES production access isn't required.
 
 #### 2. Deploy SAM Application
 ```bash
@@ -102,7 +110,7 @@ The backend has a dedicated deployment pipeline (`.github/workflows/deploy-backe
 - `AWS_BACKEND_ROLE_ARN`: IAM Role ARN for OIDC authentication (`GitHubActionsPortfolioBackendDeployRole`, output `BackendRoleArn` of `PortfolioOidcStack`).
 - `AWS_REGION`: Target AWS region (defaults to `ap-south-1`).
 - `CONTACT_RECIPIENT_EMAIL`: (Optional) Recipient email address (defaults to `ka09934147002@gmail.com`).
-- `CONTACT_SENDER_EMAIL`: (Optional) Verified SES sender email address (defaults to `ka09934147002@gmail.com`).
+- `CONTACT_SENDER_EMAIL`: (Optional) Sender address on a verified SES domain identity (defaults to `no-reply@aditya.weinventify.com`).
 
 #### CloudFormation Outputs
 Upon successful deployment, SAM outputs:

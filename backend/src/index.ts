@@ -6,7 +6,7 @@ const sesClient = new SESClient({
 });
 
 const RECIPIENT_EMAIL = process.env.RECIPIENT_EMAIL || 'ka09934147002@gmail.com';
-const SENDER_EMAIL = process.env.SENDER_EMAIL || RECIPIENT_EMAIL;
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'no-reply@aditya.weinventify.com';
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 
 const MAX_NAME_LENGTH = 100;
@@ -129,7 +129,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // Prepare SES email command
     const emailCommand = new SendEmailCommand({
-      Source: SENDER_EMAIL,
+      Source: `Portfolio Contact Form <${SENDER_EMAIL}>`,
       Destination: {
         ToAddresses: [RECIPIENT_EMAIL],
       },

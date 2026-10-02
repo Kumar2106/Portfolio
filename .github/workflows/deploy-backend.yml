@@ -121,7 +121,7 @@ jobs:
           INPUT_STAGE: ${{ inputs.stage }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
           RECIPIENT_EMAIL: ${{ secrets.CONTACT_RECIPIENT_EMAIL || 'ka09934147002@gmail.com' }}
-          SENDER_EMAIL: ${{ secrets.CONTACT_SENDER_EMAIL || 'ka09934147002@gmail.com' }}
+          SENDER_EMAIL: ${{ secrets.CONTACT_SENDER_EMAIL || 'no-reply@aditya.weinventify.com' }}
         run: |
           STAGE="${INPUT_STAGE:-prod}"
           case "$STAGE" in
